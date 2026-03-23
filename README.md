@@ -9,7 +9,7 @@ PMS implements a decentralized media serving model, where the logic and metadata
 *   **Core Engine**: Go (Golang) static binary for high concurrency and memory efficiency.
 *   **Media Processor**: FFmpeg static build integration for JIT (Just-In-Time) transcoding.
 *   **Database**: SQLite 3 for persistent metadata storage, residing in the `.metadata/` directory of the mount point.
-*   **Streaming Protocol**: HLS (HTTP Live Streaming) with support for range requests and adaptive seeking.
+*   **Streaming Protocol**: Direct HTTP byte-range streaming by default for minimal CPU/RAM usage, with optional HLS fallback.
 *   **UI System**: Neo-M3 Hybrid implementation using local CSS/JS assets to ensure full offline functionality.
 
 ## Features
@@ -20,8 +20,8 @@ Automated indexing logic that categorizes media based on directory structure:
 *   **Nested Scan**: Directories containing a dominant video file are indexed as unified Movie entities.
 *   **Collection Scan**: Nested directories under a primary category (e.g., Artis) are grouped as playlists or artist collections.
 
-### 2. JIT Transcoding
-Automatic HLS segment generation using FFmpeg. The system detects client compatibility and triggers background transcoding when required, storing segments in the local `.metadata/cache/` directory.
+### 2. Optional JIT Transcoding
+HLS segment generation using FFmpeg is available as a fallback path and stores segments in the local `.metadata/cache/` directory.
 
 ### 3. Path Sanitization
 Enforced directory traversal protection. All media requests are validated against the absolute root of the mount point to prevent unauthorized filesystem access.

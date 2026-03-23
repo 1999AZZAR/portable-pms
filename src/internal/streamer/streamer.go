@@ -2,6 +2,7 @@ package streamer
 
 import (
 	"crypto/md5"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -28,30 +29,55 @@ func New(root string) *Streamer {
 
 // ServeMedia handles direct streaming
 func (s *Streamer) ServeMedia(w http.ResponseWriter, r *http.Request) {
-	relPath := r.URL.Query().Get("path")
-	if relPath == "" {
-		http.Error(w, "Path required", http.StatusBadRequest)
+	fullPath, err := s.resolveMediaPath(r.URL.Query().Get("path"))
+	if err != nil {
+		status := http.StatusBadRequest
+		if errors.Is(err, os.ErrPermission) {
+			status = http.StatusForbidden
+		}
+		http.Error(w, err.Error(), status)
 		return
 	}
 
-	fullPath := filepath.Join(s.MediaRoot, relPath)
-	if !strings.HasPrefix(fullPath, filepath.Clean(s.MediaRoot)) {
-		http.Error(w, "Forbidden", http.StatusForbidden)
+	f, err := os.Open(fullPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.NotFound(w, r)
+			return
+		}
+		http.Error(w, "Unable to open media", http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	fi, err := f.Stat()
+	if err != nil {
+		http.Error(w, "Unable to read media metadata", http.StatusInternalServerError)
+		return
+	}
+	if !fi.Mode().IsRegular() {
+		http.Error(w, "Not a regular file", http.StatusBadRequest)
 		return
 	}
 
-	http.ServeFile(w, r, fullPath)
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	http.ServeContent(w, r, fi.Name(), fi.ModTime(), f)
 }
 
 // ServeHLS generates and serves M3U8/TS segments
 func (s *Streamer) ServeHLS(w http.ResponseWriter, r *http.Request) {
 	relPath := r.URL.Query().Get("path")
-	if relPath == "" {
-		http.Error(w, "Path required", http.StatusBadRequest)
+	fullPath, err := s.resolveMediaPath(relPath)
+	if err != nil {
+		status := http.StatusBadRequest
+		if errors.Is(err, os.ErrPermission) {
+			status = http.StatusForbidden
+		}
+		http.Error(w, err.Error(), status)
 		return
 	}
 
-	fullPath := filepath.Join(s.MediaRoot, relPath)
 	hash := fmt.Sprintf("%x", md5.Sum([]byte(relPath)))
 	hlsDir := filepath.Join(s.CacheRoot, hash)
 	os.MkdirAll(hlsDir, 0755)
@@ -89,4 +115,18 @@ func (s *Streamer) transcodeToHLS(inputPath, outputDir string) {
 	if err != nil {
 		fmt.Printf("❌ FFmpeg Error: %v\n", err)
 	}
+}
+
+func (s *Streamer) resolveMediaPath(relPath string) (string, error) {
+	if relPath == "" {
+		return "", fmt.Errorf("path required")
+	}
+
+	cleanRel := strings.TrimPrefix(filepath.Clean("/"+relPath), string(filepath.Separator))
+	fullPath := filepath.Clean(filepath.Join(s.MediaRoot, cleanRel))
+	rootWithSep := strings.TrimSuffix(filepath.Clean(s.MediaRoot), string(filepath.Separator)) + string(filepath.Separator)
+	if !strings.HasPrefix(fullPath, rootWithSep) {
+		return "", fmt.Errorf("%w: forbidden path", os.ErrPermission)
+	}
+	return fullPath, nil
 }
