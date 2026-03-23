@@ -29,23 +29,36 @@ Enforced directory traversal protection. All media requests are validated agains
 ### 4. Zero-Footprint Portability
 All application state, including the SQLite database and transcoded segments, are stored on the external drive. No data is written to the host system's internal storage.
 
-## Installation and Usage
+## Setup and Usage
 
-### Prerequisites
-*   Go 1.21+ (for building from source)
-*   FFmpeg (static binary placed in `./bin/` or available in system PATH)
-
-### Building
+### 1. Build from Source
+Ensure Go 1.21+ is installed.
 ```bash
 go build -o bin/pms src/cmd/pms/main.go
 ```
 
-### Execution
-```bash
-./bin/pms --path /path/to/media --port 8080
+### 2. Portable Deployment
+Copy the generated `bin/pms` binary and the `web/static/` directory to your external storage.
+Example structure:
+```text
+/ExternalStorage/
+  ├── pms (binary)
+  ├── web/static/
+  └── MyVideos/ (source media)
 ```
 
-### API Endpoints
+### 3. Execution
+Run the binary with the `--path` flag pointing to your media directory.
+```bash
+./pms --path /path/to/media --port 8080
+```
+
+### 4. Access
+Navigate to the server address in any browser:
+*   **Local Host**: `http://localhost:8080`
+*   **Network Access**: `http://[HOST_IP]:8080`
+
+## API Reference
 *   `GET /api/media`: Returns a JSON array of indexed media metadata.
 *   `GET /stream?path=...`: Serves direct file stream with range request support.
 *   `GET /hls/...`: Serves HLS playlists and segments.
