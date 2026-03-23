@@ -149,14 +149,20 @@ func main() {
 				@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap');
 
 				:root {
-					--bg: #0f0f10;
-					--surface: #1a1a1c;
-					--surface-soft: #232327;
-					--text: #f1f1f1;
-					--muted: #a8a8ad;
-					--accent: #ff3d3d;
-					--accent-soft: #3a1f1f;
-					--border: #2e2e33;
+					--bg: #090909;
+					--surface: #121214;
+					--surface-soft: #1d1d22;
+					--text: #f5f5f7;
+					--muted: #9ea2aa;
+					--accent: #ff2f2f;
+					--accent-soft: #321616;
+					--border: #2a2b31;
+					--shell-pad: 12px;
+					--playlist-card-min: 220px;
+					--playlist-card-max: 300px;
+					--rail-card-min: 260px;
+					--rail-card-max: 330px;
+					--glow: 0 14px 40px rgba(0, 0, 0, 0.45);
 				}
 
 				* {
@@ -164,17 +170,26 @@ func main() {
 				}
 
 				body {
-					background: radial-gradient(1000px 700px at 80% -10%, #2a2a35 0%, var(--bg) 45%);
+					background:
+						radial-gradient(900px 560px at 90% -18%, rgba(255, 47, 47, 0.18) 0%, transparent 55%),
+						radial-gradient(700px 520px at -5% 120%, rgba(255, 140, 0, 0.08) 0%, transparent 62%),
+						linear-gradient(180deg, #111115 0%, var(--bg) 40%);
 					color: var(--text);
 					font-family: 'Manrope', sans-serif;
 					margin: 0;
 					min-height: 100vh;
+					height: 100vh;
+					overflow: hidden;
 				}
 
 				.app-shell {
-					max-width: 1420px;
+					width: 100%;
+					max-width: 100vw;
 					margin: 0 auto;
-					padding: 16px;
+					padding: var(--shell-pad);
+					height: 100vh;
+					display: flex;
+					flex-direction: column;
 				}
 
 				.topbar {
@@ -184,18 +199,20 @@ func main() {
 					display: flex;
 					align-items: center;
 					justify-content: space-between;
+					flex-wrap: wrap;
 					gap: 12px;
-					padding: 10px 14px;
-					background: rgba(18, 18, 20, 0.85);
-					border: 1px solid var(--border);
-					border-radius: 14px;
-					backdrop-filter: blur(10px);
+					padding: 12px 14px;
+					background: linear-gradient(135deg, rgba(22, 22, 27, 0.94) 0%, rgba(13, 13, 16, 0.9) 100%);
+					border: 1px solid #35363d;
+					border-radius: 16px;
+					backdrop-filter: blur(12px);
+					box-shadow: var(--glow), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 					margin-bottom: 16px;
 				}
 
 				.brand {
 					font-weight: 800;
-					font-size: 1.1rem;
+					font-size: clamp(0.95rem, 1.2vw, 1.1rem);
 					letter-spacing: 0.4px;
 					display: flex;
 					align-items: center;
@@ -203,22 +220,35 @@ func main() {
 				}
 
 				.brand-dot {
-					width: 10px;
-					height: 10px;
+					width: 12px;
+					height: 12px;
 					border-radius: 999px;
 					background: var(--accent);
-					box-shadow: 0 0 16px rgba(255, 61, 61, 0.65);
+					box-shadow: 0 0 24px rgba(255, 47, 47, 0.72);
 				}
 
-				.top-actions {
-					display: flex;
-					gap: 8px;
-					align-items: center;
+				.brand-copy {
+					display: grid;
+					gap: 0;
+					line-height: 1.1;
+				}
+
+				.brand-name {
+					font-weight: 800;
+					letter-spacing: 0.55px;
+				}
+
+				.brand-sub {
+					font-size: 0.68rem;
+					color: #a7abb3;
+					text-transform: uppercase;
+					letter-spacing: 0.8px;
 				}
 
 				.search-wrap {
 					flex: 1;
-					max-width: 640px;
+					max-width: 760px;
+					min-width: 260px;
 					display: flex;
 					gap: 8px;
 					align-items: center;
@@ -226,35 +256,44 @@ func main() {
 
 				.search-input {
 					width: 100%;
-					border: 1px solid #38383f;
-					background: #141417;
+					border: 1px solid #3c3f49;
+					background: #0d0d11;
 					border-radius: 999px;
-					padding: 9px 14px;
+					padding: clamp(8px, 1.2vw, 10px) 14px;
 					color: #ececf0;
-					font-size: 0.88rem;
+					font-size: clamp(0.8rem, 1vw, 0.88rem);
 					outline: none;
 				}
 
 				.search-input:focus {
-					border-color: #6a3737;
-					box-shadow: 0 0 0 2px rgba(255, 61, 61, 0.2);
+					border-color: #8d3737;
+					box-shadow: 0 0 0 2px rgba(255, 47, 47, 0.2);
 				}
 
 				.layout {
 					display: grid;
 					grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
 					gap: 18px;
+					flex: 1;
+					height: auto;
+					min-height: 0;
 				}
+
 
 				.panel {
 					border: 1px solid var(--border);
-					background: var(--surface);
+					background: linear-gradient(160deg, rgba(20, 20, 24, 0.97) 0%, rgba(13, 13, 16, 0.96) 100%);
 					border-radius: 16px;
 					overflow: hidden;
+					min-height: 0;
+					box-shadow: var(--glow);
 				}
 
 				.player-wrap {
 					padding: 14px;
+					height: 100%;
+					overflow-y: auto;
+					overflow-x: hidden;
 				}
 
 				.video-frame {
@@ -262,7 +301,8 @@ func main() {
 					background: #000;
 					border-radius: 14px;
 					overflow: hidden;
-					border: 1px solid #000;
+					border: 1px solid #3a3a42;
+					box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 				}
 
 				.video-frame video {
@@ -277,7 +317,7 @@ func main() {
 				}
 
 				.now-playing h1 {
-					font-size: 1.15rem;
+					font-size: clamp(1rem, 1.5vw, 1.18rem);
 					font-weight: 800;
 					margin: 0 0 6px;
 					line-height: 1.35;
@@ -286,7 +326,7 @@ func main() {
 				.now-playing p {
 					color: var(--muted);
 					margin: 0;
-					font-size: 0.9rem;
+					font-size: clamp(0.8rem, 1.1vw, 0.9rem);
 				}
 
 				.meta-row {
@@ -304,26 +344,28 @@ func main() {
 				}
 
 				.btn-control {
-					border: 1px solid #3b3b41;
-					background: #25252a;
+					border: 1px solid #3d3f46;
+					background: linear-gradient(180deg, #262931 0%, #1e2027 100%);
 					color: #efeff2;
 					padding: 7px 12px;
 					border-radius: 10px;
-					font-size: 0.82rem;
+					font-size: clamp(0.75rem, 0.95vw, 0.82rem);
 					font-weight: 700;
 					cursor: pointer;
-					transition: background 0.15s ease, border-color 0.15s ease;
+					transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+					white-space: nowrap;
 				}
 
 				.btn-control:hover {
-					background: #2f2f35;
-					border-color: #4a4a52;
+					background: linear-gradient(180deg, #2d313c 0%, #252933 100%);
+					border-color: #575d6d;
+					transform: translateY(-1px);
 				}
 
 				.btn-control.accent {
-					background: #3a1f1f;
-					border-color: #5b2f2f;
-					color: #ffb3b3;
+					background: linear-gradient(180deg, #5b1f1f 0%, #431717 100%);
+					border-color: #9f3030;
+					color: #ffd3d3;
 				}
 
 				.meta-chip {
@@ -342,6 +384,8 @@ func main() {
 					border-bottom: 1px solid var(--border);
 					display: grid;
 					gap: 10px;
+					background: linear-gradient(180deg, rgba(18, 18, 22, 0.9) 0%, rgba(14, 14, 18, 0.92) 100%);
+					backdrop-filter: blur(8px);
 				}
 
 				.sidebar-head-top {
@@ -365,12 +409,12 @@ func main() {
 				}
 
 				.playlist-select {
-					border: 1px solid #3b3b41;
-					background: #151519;
+					border: 1px solid #3e414a;
+					background: #111218;
 					color: #e6e6eb;
 					border-radius: 10px;
 					padding: 8px 10px;
-					font-size: 0.82rem;
+					font-size: clamp(0.75rem, 0.95vw, 0.82rem);
 					font-weight: 700;
 					min-width: 0;
 				}
@@ -379,72 +423,64 @@ func main() {
 					font-size: 0.78rem;
 					padding: 3px 9px;
 					border-radius: 999px;
-					background: var(--accent-soft);
-					color: #ffb3b3;
-					border: 1px solid #5f2b2b;
+					background: linear-gradient(180deg, #461a1a 0%, #311111 100%);
+					color: #ffc1c1;
+					border: 1px solid #8f2d2d;
 					font-weight: 700;
 				}
 
 				#media-list {
-					max-height: calc(100vh - 180px);
-					overflow: auto;
+					max-height: none;
+					overflow-y: auto;
+					overflow-x: hidden;
 					padding: 8px;
+					flex: 1;
+				}
+
+				aside.panel {
+					display: flex;
+					flex-direction: column;
 				}
 
 				.media-item {
 					display: block;
 					width: 100%;
-					border: 1px solid transparent;
-					background: transparent;
+					border: 1px solid #3a3d45;
+					background: linear-gradient(180deg, #20232b 0%, #171a20 100%);
 					color: var(--text);
 					text-align: left;
-					border-radius: 12px;
-					padding: 12px;
+					border-radius: 14px;
+					padding: 10px;
 					margin: 0 0 8px;
 					cursor: pointer;
-					transition: background 0.18s ease, border-color 0.18s ease;
+					transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 				}
 
 				.media-list.grid {
 					display: grid;
-					grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+					grid-template-columns: repeat(auto-fill, minmax(var(--playlist-card-min), var(--playlist-card-max)));
 					gap: 10px;
+					justify-content: center;
+					align-content: start;
 				}
 
 				.media-list.grid .media-item {
 					margin: 0;
 					height: 100%;
-				}
-
-				.media-row {
-					display: flex;
-					align-items: flex-start;
-					gap: 10px;
-				}
-
-				.media-thumb {
-					width: 82px;
-					aspect-ratio: 2 / 3;
-					object-fit: cover;
-					border-radius: 8px;
-					border: 1px solid #3a3a40;
-					background: #101013;
-					flex: 0 0 auto;
-				}
-
-				.media-main {
-					min-width: 0;
-					flex: 1;
+					max-width: var(--playlist-card-max);
 				}
 
 				.media-item:hover {
-					background: var(--surface-soft);
-					border-color: #393940;
+					background: linear-gradient(180deg, #2d313c 0%, #232730 100%);
+					border-color: #6e3a3a;
+					transform: translateY(-2px);
+					box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 				}
 
 				.media-item.active {
-					background: #2a1a1a;
-					border-color: #5b2f2f;
+					background: linear-gradient(180deg, #542323 0%, #331818 100%);
+					border-color: #a33b3b;
+					box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
 				}
 
 				.media-title {
@@ -474,10 +510,10 @@ func main() {
 
 				.recommend-card {
 					flex: 0 0 auto;
-					min-width: 260px;
-					max-width: 300px;
-					border: 1px solid #42424a;
-					background: linear-gradient(180deg, #26262d 0%, #1f1f25 100%);
+					min-width: var(--rail-card-min);
+					max-width: var(--rail-card-max);
+					border: 1px solid #3b3e46;
+					background: linear-gradient(180deg, #21242c 0%, #171a20 100%);
 					color: #ececf0;
 					border-radius: 14px;
 					padding: 10px;
@@ -487,9 +523,10 @@ func main() {
 				}
 
 				.recommend-card:hover {
-					background: linear-gradient(180deg, #2e2e36 0%, #25252c 100%);
-					border-color: #5b2f2f;
-					transform: translateY(-1px);
+					background: linear-gradient(180deg, #303542 0%, #232833 100%);
+					border-color: #834040;
+					transform: translateY(-2px);
+					box-shadow: 0 10px 24px rgba(0, 0, 0, 0.36);
 				}
 
 				.recommend-card .recommend-name {
@@ -515,10 +552,10 @@ func main() {
 
 				.recent-card {
 					flex: 0 0 auto;
-					min-width: 260px;
-					max-width: 300px;
-					border: 1px solid #3d3d45;
-					background: linear-gradient(180deg, #222229 0%, #1b1b21 100%);
+					min-width: var(--rail-card-min);
+					max-width: var(--rail-card-max);
+					border: 1px solid #393d46;
+					background: linear-gradient(180deg, #1d2028 0%, #14171d 100%);
 					color: #ececf0;
 					border-radius: 14px;
 					padding: 10px;
@@ -528,9 +565,10 @@ func main() {
 				}
 
 				.recent-card:hover {
-					border-color: #5b2f2f;
-					background: linear-gradient(180deg, #2a2a32 0%, #24242b 100%);
-					transform: translateY(-1px);
+					border-color: #7a3b3b;
+					background: linear-gradient(180deg, #2c313d 0%, #222733 100%);
+					transform: translateY(-2px);
+					box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
 				}
 
 				.recent-name {
@@ -550,19 +588,55 @@ func main() {
 					aspect-ratio: 16 / 9;
 					border-radius: 10px;
 					object-fit: cover;
-					background: radial-gradient(120% 120% at 20% 10%, #3b3b49 0%, #23232b 45%, #17171b 100%);
-					border: 1px solid #3d3d45;
+					background: radial-gradient(120% 120% at 20% 10%, #3f4556 0%, #21252f 45%, #12141a 100%);
+					border: 1px solid #424753;
 					margin-bottom: 8px;
 					display: block;
+					box-shadow: inset 0 -28px 34px rgba(0, 0, 0, 0.2);
 				}
 
 				.card-kind {
 					font-size: 0.7rem;
 					font-weight: 800;
 					letter-spacing: 0.4px;
-					color: #ffb3b3;
+					color: #ff9797;
 					text-transform: uppercase;
 					margin-bottom: 4px;
+				}
+
+				body[data-size="S"] .layout {
+					grid-template-columns: minmax(0, 2.4fr) minmax(260px, 0.8fr);
+					gap: 12px;
+				}
+
+				body[data-size="S"] {
+					--playlist-card-min: 180px;
+					--playlist-card-max: 230px;
+					--rail-card-min: 210px;
+					--rail-card-max: 260px;
+				}
+
+				body[data-size="M"] .layout {
+					grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+				}
+
+				body[data-size="M"] {
+					--playlist-card-min: 220px;
+					--playlist-card-max: 300px;
+					--rail-card-min: 260px;
+					--rail-card-max: 330px;
+				}
+
+				body[data-size="L"] .layout {
+					grid-template-columns: minmax(0, 1.6fr) minmax(420px, 1.2fr);
+					gap: 20px;
+				}
+
+				body[data-size="L"] {
+					--playlist-card-min: 250px;
+					--playlist-card-max: 360px;
+					--rail-card-min: 290px;
+					--rail-card-max: 390px;
 				}
 
 				.empty-state {
@@ -598,21 +672,63 @@ func main() {
 					text-transform: uppercase;
 					color: var(--muted);
 					margin-bottom: 8px;
+					display: flex;
+					align-items: center;
+					gap: 8px;
+				}
+
+				.section-title::before {
+					content: "";
+					display: inline-block;
+					width: 12px;
+					height: 3px;
+					border-radius: 999px;
+					background: linear-gradient(90deg, #ff3a3a 0%, #ff8a00 100%);
 				}
 
 				@media (max-width: 1024px) {
+					.topbar {
+						align-items: flex-start;
+					}
+
+					.search-wrap {
+						order: 3;
+						flex-basis: 100%;
+						max-width: none;
+					}
+
+					.playlist-tools {
+						grid-template-columns: 1fr 1fr;
+					}
+
+					.playlist-tools > :last-child {
+						grid-column: 1 / -1;
+					}
+
 					.layout {
 						grid-template-columns: 1fr;
+						height: auto;
 					}
 
 					#media-list {
-						max-height: 48vh;
+						max-height: 54vh;
+					}
+
+					.recommend-card,
+					.recent-card {
+						min-width: 220px;
+						max-width: 260px;
 					}
 				}
 
 				@media (max-width: 640px) {
+					body {
+						overflow: auto;
+					}
+
 					.app-shell {
 						padding: 10px;
+						height: auto;
 					}
 
 					.topbar {
@@ -622,6 +738,7 @@ func main() {
 
 					.search-wrap {
 						max-width: none;
+						min-width: 0;
 					}
 
 					.player-wrap {
@@ -631,11 +748,73 @@ func main() {
 					.video-frame {
 						border-radius: 10px;
 					}
+
+					.playlist-tools {
+						grid-template-columns: 1fr;
+					}
+
+					.playlist-tools > :last-child {
+						grid-column: auto;
+					}
+
+					.recommend-card,
+					.recent-card {
+						min-width: 180px;
+						max-width: 220px;
+					}
+
+					.card-thumb {
+						border-radius: 8px;
+					}
 				}
 
-				::-webkit-scrollbar { width: 10px; }
-				::-webkit-scrollbar-track { background: #16161a; }
-				::-webkit-scrollbar-thumb { background: #33333a; border-radius: 999px; }
+				#media-list,
+				.player-wrap,
+				.recommend-list,
+				.recent-list {
+					scrollbar-width: none;
+				}
+				#media-list:hover,
+				.player-wrap:hover,
+				.recommend-list:hover,
+				.recent-list:hover {
+					scrollbar-width: thin;
+					scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+				}
+				#media-list::-webkit-scrollbar,
+				.player-wrap::-webkit-scrollbar,
+				.recommend-list::-webkit-scrollbar,
+				.recent-list::-webkit-scrollbar {
+					width: 0;
+					height: 0;
+				}
+				#media-list:hover::-webkit-scrollbar,
+				.player-wrap:hover::-webkit-scrollbar,
+				.recommend-list:hover::-webkit-scrollbar,
+				.recent-list:hover::-webkit-scrollbar {
+					width: 10px;
+					height: 10px;
+				}
+				#media-list::-webkit-scrollbar-track,
+				.player-wrap::-webkit-scrollbar-track,
+				.recommend-list::-webkit-scrollbar-track,
+				.recent-list::-webkit-scrollbar-track {
+					background: transparent;
+				}
+				#media-list::-webkit-scrollbar-thumb,
+				.player-wrap::-webkit-scrollbar-thumb,
+				.recommend-list::-webkit-scrollbar-thumb,
+				.recent-list::-webkit-scrollbar-thumb {
+					background: transparent;
+					border-radius: 999px;
+					border: 2px solid transparent;
+				}
+				#media-list:hover::-webkit-scrollbar-thumb,
+				.player-wrap:hover::-webkit-scrollbar-thumb,
+				.recommend-list:hover::-webkit-scrollbar-thumb,
+				.recent-list:hover::-webkit-scrollbar-thumb {
+					background: rgba(255, 255, 255, 0.08);
+				}
 			</style>
 		</head>
 		<body>
@@ -643,15 +822,14 @@ func main() {
 				<header class="topbar">
 					<div class="brand">
 						<span class="brand-dot"></span>
-						<span>PMS</span>
+						<div class="brand-copy">
+							<span class="brand-name">PMS</span>
+							<span class="brand-sub">Portable Media Streamer</span>
+						</div>
 					</div>
 					<div class="search-wrap">
 						<input id="search-input" class="search-input" type="search" placeholder="Search title, series, category... (Press /)">
 						<button id="btn-clear-search" class="btn-control" type="button">Clear</button>
-					</div>
-					<div class="top-actions">
-						<button id="btn-view-list" class="btn-control accent" type="button">List</button>
-						<button id="btn-view-grid" class="btn-control" type="button">Grid</button>
 					</div>
 				</header>
 
@@ -726,8 +904,6 @@ func main() {
 				const typeSelect = document.getElementById('type-select');
 				const searchInput = document.getElementById('search-input');
 				const btnClearSearch = document.getElementById('btn-clear-search');
-				const btnViewList = document.getElementById('btn-view-list');
-				const btnViewGrid = document.getElementById('btn-view-grid');
 				const btnPrev = document.getElementById('btn-prev');
 				const btnNext = document.getElementById('btn-next');
 				const btnAutoplay = document.getElementById('btn-autoplay');
@@ -741,7 +917,6 @@ func main() {
 				let autoplayNext = true;
 				let lastPlayedPath = '';
 				let hlsInstance = null;
-				let viewMode = 'list';
 				let recentPaths = [];
 				let recommendationAnchorPath = '';
 				let recommendationPaths = [];
@@ -753,6 +928,26 @@ func main() {
 						.replace(/>/g, '&gt;')
 						.replace(/"/g, '&quot;')
 						.replace(/'/g, '&#39;');
+				}
+
+				function setSizeMode(mode) {
+					document.body.setAttribute('data-size', mode);
+				}
+
+				function chooseAutoSizeMode() {
+					const w = window.innerWidth;
+					const h = window.innerHeight;
+					if (w < 1200 || h < 760) {
+						return 'S';
+					}
+					if (w > 1850 && h > 860) {
+						return 'L';
+					}
+					return 'M';
+				}
+
+				function applyAutoSizeMode() {
+					setSizeMode(chooseAutoSizeMode());
 				}
 
 				function fileNameFromPath(path) {
@@ -937,6 +1132,20 @@ func main() {
 					typeSelect.value = allTypes.indexOf(current) >= 0 ? current : '';
 				}
 
+				function refreshQueue(selectFirst) {
+					buildQueue();
+					if (lastPlayedPath) {
+						syncActiveFromPath(lastPlayedPath);
+					}
+					if (currentIndex < 0 && currentQueue.length > 0) {
+						currentIndex = 0;
+					}
+					renderQueue();
+					if (selectFirst && currentIndex >= 0) {
+						selectItemByQueueIndex(currentIndex);
+					}
+				}
+
 				function buildQueue() {
 					const selectedRoot = rootSelect.value;
 					const selectedSeries = seriesSelect.value;
@@ -971,23 +1180,19 @@ func main() {
 						renderRecent();
 						return;
 					}
-					listDiv.classList.toggle('grid', viewMode === 'grid');
+					const useGrid = window.innerWidth > 640;
+					listDiv.classList.toggle('grid', useGrid);
 
 					listDiv.innerHTML = currentQueue.map(function(m, i) {
 						const ep = m.episodeNo !== null ? ('EP ' + m.episodeNo) : 'EP -';
 						const sub = m.isJav ? (m.series + ' • CODE') : (m.isArtist ? (m.series + ' • CLIP') : (m.series + ' • ' + ep));
-						const thumb = m.isJav && m.coverPath
-							? ('<img class="media-thumb" src="/stream?path=' + encodeURIComponent(m.coverPath) + '" alt="' + esc(m.episodeTitle) + '" loading="lazy" onerror="this.style.display=&quot;none&quot;">')
-							: '';
+						const kind = m.isJav ? 'JAV' : (m.isArtist ? 'Artist' : 'Episode');
 						return '' +
 							'<button class="media-item' + (i === currentIndex ? ' active' : '') + '" data-qidx="' + i + '">' +
-								'<div class="media-row">' +
-									thumb +
-									'<div class="media-main">' +
-										'<div class="media-title">' + esc(m.episodeTitle) + '</div>' +
-										'<div class="media-sub">' + esc(sub) + '</div>' +
-									'</div>' +
-								'</div>' +
+								cardThumbHtml(m) +
+								'<div class="card-kind">' + esc(kind) + '</div>' +
+								'<div class="media-title">' + esc(m.episodeTitle) + '</div>' +
+								'<div class="media-sub">' + esc(sub) + '</div>' +
 							'</button>';
 					}).join('');
 
@@ -1257,18 +1462,6 @@ func main() {
 				btnNext.addEventListener('click', playNext);
 				btnPlayRandom.addEventListener('click', playRandom);
 				btnShuffle.addEventListener('click', shuffleQueue);
-				btnViewList.addEventListener('click', function() {
-					viewMode = 'list';
-					btnViewList.classList.add('accent');
-					btnViewGrid.classList.remove('accent');
-					renderQueue();
-				});
-				btnViewGrid.addEventListener('click', function() {
-					viewMode = 'grid';
-					btnViewGrid.classList.add('accent');
-					btnViewList.classList.remove('accent');
-					renderQueue();
-				});
 				btnAutoplay.addEventListener('click', function() {
 					autoplayNext = !autoplayNext;
 					btnAutoplay.textContent = autoplayNext ? 'Autoplay: ON' : 'Autoplay: OFF';
@@ -1280,38 +1473,19 @@ func main() {
 				});
 				rootSelect.addEventListener('change', function() {
 					rebuildSeriesOptions();
-					buildQueue();
-					currentIndex = currentQueue.length > 0 ? 0 : -1;
-					renderQueue();
-					if (currentIndex >= 0) {
-						selectItemByQueueIndex(currentIndex);
-					}
+					currentIndex = -1;
+					refreshQueue(true);
 				});
 				seriesSelect.addEventListener('change', function() {
-					buildQueue();
-					currentIndex = currentQueue.length > 0 ? 0 : -1;
-					renderQueue();
-					if (currentIndex >= 0) {
-						selectItemByQueueIndex(currentIndex);
-					}
+					currentIndex = -1;
+					refreshQueue(true);
 				});
 				typeSelect.addEventListener('change', function() {
-					buildQueue();
-					currentIndex = currentQueue.length > 0 ? 0 : -1;
-					renderQueue();
-					if (currentIndex >= 0) {
-						selectItemByQueueIndex(currentIndex);
-					}
+					currentIndex = -1;
+					refreshQueue(true);
 				});
 				searchInput.addEventListener('input', function() {
-					buildQueue();
-					if (lastPlayedPath) {
-						syncActiveFromPath(lastPlayedPath);
-					}
-					if (currentIndex < 0 && currentQueue.length > 0) {
-						currentIndex = 0;
-					}
-					renderQueue();
+					refreshQueue(false);
 				});
 				searchInput.addEventListener('keydown', function(e) {
 					if (e.key === 'Enter' && currentQueue.length > 0) {
@@ -1321,14 +1495,7 @@ func main() {
 				btnClearSearch.addEventListener('click', function() {
 					searchInput.value = '';
 					searchInput.focus();
-					buildQueue();
-					if (lastPlayedPath) {
-						syncActiveFromPath(lastPlayedPath);
-					}
-					if (currentIndex < 0 && currentQueue.length > 0) {
-						currentIndex = 0;
-					}
-					renderQueue();
+					refreshQueue(false);
 				});
 				document.addEventListener('keydown', function(e) {
 					if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
@@ -1349,6 +1516,11 @@ func main() {
 					}
 				});
 
+				applyAutoSizeMode();
+				window.addEventListener('resize', function() {
+					applyAutoSizeMode();
+					renderQueue();
+				});
 				fetchMedia();
 				// Refresh list periodically (faster while scanning)
 				setInterval(fetchMedia, 5000);
