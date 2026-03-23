@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/1999AZZAR/portable-pms/src/internal/db"
+	"github.com/1999AZZAR/portable-pms/src/internal/scanner"
 )
 
 func main() {
@@ -19,18 +22,30 @@ func main() {
 		log.Fatalf("Invalid path: %v", err)
 	}
 
+	// 1. Init Database in .metadata folder
+	metaDir := filepath.Join(absPath, ".metadata")
+	os.MkdirAll(metaDir, 0755)
+	database, err := db.InitDB(filepath.Join(metaDir, "pms.db"))
+	if err != nil {
+		log.Fatalf("DB Init failed: %v", err)
+	}
+
 	fmt.Printf("🚀 Starting Portable Media Streamer\n")
 	fmt.Printf("📂 Media Path: %s\n", absPath)
 	fmt.Printf("🌐 Address: http://localhost:%d\n", *port)
 
-	// Minimal check for FFmpeg in local bin
-	ffmpegPath := filepath.Join(".", "bin", "ffmpeg")
-	if _, err := os.Stat(ffmpegPath); os.IsNotExist(err) {
-		fmt.Printf("⚠️ Warning: FFmpeg not found in ./bin/ffmpeg. Transcoding will use system ffmpeg.\n")
-	}
+	// 2. Start Scanner (Async)
+	go func() {
+		fmt.Printf("🔍 Scanning for media...\n")
+		s := scanner.New(absPath, database)
+		if err := s.Start(); err != nil {
+			fmt.Printf("❌ Scanner error: %v\n", err)
+		}
+		fmt.Printf("✨ Scanning complete!\n")
+	}()
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Welcome to Portable Media Streamer (PMS)\nMaster: Azzar Budiyanto\nStatus: Core Initialized")
+		fmt.Fprintf(w, "Welcome to Portable Media Streamer (PMS)\nMaster: Azzar Budiyanto\nStatus: Online & Indexing")
 	})
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
