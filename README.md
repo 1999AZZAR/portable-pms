@@ -10,23 +10,33 @@ PMS implements a decentralized media serving model, where the logic and metadata
 *   **Media Processor**: FFmpeg static build integration for JIT (Just-In-Time) transcoding.
 *   **Database**: SQLite 3 for persistent metadata storage, residing in the `.metadata/` directory of the mount point.
 *   **Streaming Protocol**: Direct HTTP byte-range streaming by default for minimal CPU/RAM usage, with optional HLS fallback.
-*   **UI System**: Neo-M3 Hybrid implementation using local CSS/JS assets to ensure full offline functionality.
+*   **UI System**: Dark watch-style UI with playlist management, recommendations, and recent history.
 
 ## Features
 
-### 1. Tri-Pattern Discovery
-Automated indexing logic that categorizes media based on directory structure:
-*   **Flat Scan**: Single files are indexed as standalone video entities.
-*   **Nested Scan**: Directories containing a dominant video file are indexed as unified Movie entities.
-*   **Collection Scan**: Nested directories under a primary category (e.g., Artis) are grouped as playlists or artist collections.
+### 1. Media Discovery and Classification
+Automated indexing logic categorizes media based on directory structure:
+*   **Flat Files**: Single files are indexed as `video`.
+*   **Collections**: Nested series-style folders are indexed as `collection`.
+*   **JAV Pattern**: `<root>/<top>/JAV/<code>/<video>` is indexed as `jav` (with cover-aware UI support).
+*   **Artist Pattern**: `<root>/<top>/PORNSTARTS/<artist>/<video>` and `<root>/<top>/UC/<artist>/<video>` are indexed as `artist`.
 
-### 2. Optional JIT Transcoding
-HLS segment generation using FFmpeg is available as a fallback path and stores segments in the local `.metadata/cache/` directory.
+### 2. Playback Compatibility
+*   Direct HTTP range streaming (`/stream`) is the default lightweight path.
+*   Automatic HLS fallback (`/hls`) is used for files that fail browser-native decode support.
+*   HLS segments are generated via FFmpeg and stored in `.metadata/cache/`.
 
-### 3. Path Sanitization
+### 3. Playlist and Queue Management
+*   Root, playlist, type, and search filters.
+*   Episode-aware ordering (with heuristic episode parsing).
+*   Prev/Next/Shuffle/Random controls.
+*   Autoplay next toggle.
+*   Recommendations and recently played rails.
+
+### 4. Path Sanitization
 Enforced directory traversal protection. All media requests are validated against the absolute root of the mount point to prevent unauthorized filesystem access.
 
-### 4. Zero-Footprint Portability
+### 5. Zero-Footprint Portability
 All application state, including the SQLite database and transcoded segments, are stored on the external drive. No data is written to the host system's internal storage.
 
 ## Setup and Usage
@@ -52,6 +62,7 @@ Open `http://localhost:8080` in your browser.
 
 ## API Reference
 *   `GET /api/media`: Returns a JSON array of indexed media metadata.
+*   `GET /api/status`: Returns scanner state (`{"scanning": true|false}`).
 *   `GET /stream?path=...`: Serves direct file stream with range request support.
 *   `GET /hls/...`: Serves HLS playlists and segments.
 

@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"mime"
 	"net/http"
 	"os"
 	"os/exec"
@@ -60,6 +61,9 @@ func (s *Streamer) ServeMedia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if ct := contentTypeForPath(fullPath); ct != "" {
+		w.Header().Set("Content-Type", ct)
+	}
 	w.Header().Set("Accept-Ranges", "bytes")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	http.ServeContent(w, r, fi.Name(), fi.ModTime(), f)
@@ -129,4 +133,24 @@ func (s *Streamer) resolveMediaPath(relPath string) (string, error) {
 		return "", fmt.Errorf("%w: forbidden path", os.ErrPermission)
 	}
 	return fullPath, nil
+}
+
+func contentTypeForPath(path string) string {
+	ext := strings.ToLower(filepath.Ext(path))
+	switch ext {
+	case ".mp4":
+		return "video/mp4"
+	case ".mkv":
+		return "video/x-matroska"
+	case ".avi":
+		return "video/x-msvideo"
+	case ".mov":
+		return "video/quicktime"
+	case ".m3u8":
+		return "application/vnd.apple.mpegurl"
+	case ".ts":
+		return "video/mp2t"
+	default:
+		return mime.TypeByExtension(ext)
+	}
 }

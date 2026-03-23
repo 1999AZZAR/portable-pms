@@ -144,6 +144,7 @@ func main() {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0">
 			<title>PMS - Portable Media Streamer</title>
 			<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+			<script src="/static/js/hls.min.js"></script>
 			<style>
 				@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap');
 
@@ -207,6 +208,12 @@ func main() {
 					border-radius: 999px;
 					background: var(--accent);
 					box-shadow: 0 0 16px rgba(255, 61, 61, 0.65);
+				}
+
+				.top-actions {
+					display: flex;
+					gap: 8px;
+					align-items: center;
 				}
 
 				.search-wrap {
@@ -353,7 +360,7 @@ func main() {
 
 				.playlist-tools {
 					display: grid;
-					grid-template-columns: 1fr 1fr auto;
+					grid-template-columns: 1fr 1fr 1fr auto;
 					gap: 8px;
 				}
 
@@ -398,6 +405,17 @@ func main() {
 					transition: background 0.18s ease, border-color 0.18s ease;
 				}
 
+				.media-list.grid {
+					display: grid;
+					grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+					gap: 10px;
+				}
+
+				.media-list.grid .media-item {
+					margin: 0;
+					height: 100%;
+				}
+
 				.media-row {
 					display: flex;
 					align-items: flex-start;
@@ -405,7 +423,7 @@ func main() {
 				}
 
 				.media-thumb {
-					width: 68px;
+					width: 82px;
 					aspect-ratio: 2 / 3;
 					object-fit: cover;
 					border-radius: 8px;
@@ -440,6 +458,111 @@ func main() {
 				.media-sub {
 					font-size: 0.78rem;
 					color: var(--muted);
+				}
+
+				.recommend-title {
+					margin-top: 14px;
+				}
+
+				.recommend-list {
+					display: flex;
+					gap: 12px;
+					overflow-x: auto;
+					padding-bottom: 8px;
+					margin-top: 8px;
+				}
+
+				.recommend-card {
+					flex: 0 0 auto;
+					min-width: 260px;
+					max-width: 300px;
+					border: 1px solid #42424a;
+					background: linear-gradient(180deg, #26262d 0%, #1f1f25 100%);
+					color: #ececf0;
+					border-radius: 14px;
+					padding: 10px;
+					text-align: left;
+					cursor: pointer;
+					transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+				}
+
+				.recommend-card:hover {
+					background: linear-gradient(180deg, #2e2e36 0%, #25252c 100%);
+					border-color: #5b2f2f;
+					transform: translateY(-1px);
+				}
+
+				.recommend-card .recommend-name {
+					font-size: 0.9rem;
+					font-weight: 700;
+					line-height: 1.35;
+					margin-bottom: 5px;
+					word-break: break-word;
+				}
+
+				.recommend-card .recommend-meta {
+					font-size: 0.78rem;
+					color: var(--muted);
+				}
+
+				.recent-list {
+					display: flex;
+					gap: 12px;
+					overflow-x: auto;
+					padding-bottom: 8px;
+					margin-top: 8px;
+				}
+
+				.recent-card {
+					flex: 0 0 auto;
+					min-width: 260px;
+					max-width: 300px;
+					border: 1px solid #3d3d45;
+					background: linear-gradient(180deg, #222229 0%, #1b1b21 100%);
+					color: #ececf0;
+					border-radius: 14px;
+					padding: 10px;
+					text-align: left;
+					cursor: pointer;
+					transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+				}
+
+				.recent-card:hover {
+					border-color: #5b2f2f;
+					background: linear-gradient(180deg, #2a2a32 0%, #24242b 100%);
+					transform: translateY(-1px);
+				}
+
+				.recent-name {
+					font-size: 0.9rem;
+					font-weight: 700;
+					line-height: 1.35;
+					margin-bottom: 4px;
+				}
+
+				.recent-meta {
+					font-size: 0.78rem;
+					color: var(--muted);
+				}
+
+				.card-thumb {
+					width: 100%;
+					aspect-ratio: 16 / 9;
+					border-radius: 10px;
+					object-fit: cover;
+					background: radial-gradient(120% 120% at 20% 10%, #3b3b49 0%, #23232b 45%, #17171b 100%);
+					border: 1px solid #3d3d45;
+					margin-bottom: 8px;
+					display: block;
+				}
+
+				.card-kind {
+					font-size: 0.7rem;
+					font-weight: 800;
+					letter-spacing: 0.4px;
+					color: #ffb3b3;
+					text-transform: uppercase;
+					margin-bottom: 4px;
 				}
 
 				.empty-state {
@@ -526,7 +649,10 @@ func main() {
 						<input id="search-input" class="search-input" type="search" placeholder="Search title, series, category... (Press /)">
 						<button id="btn-clear-search" class="btn-control" type="button">Clear</button>
 					</div>
-					<div class="section-title mb-0">Watch</div>
+					<div class="top-actions">
+						<button id="btn-view-list" class="btn-control accent" type="button">List</button>
+						<button id="btn-view-grid" class="btn-control" type="button">Grid</button>
+					</div>
 				</header>
 
 				<div class="layout">
@@ -547,7 +673,12 @@ func main() {
 									<button id="btn-prev" class="btn-control" type="button">Prev</button>
 									<button id="btn-next" class="btn-control" type="button">Next</button>
 									<button id="btn-autoplay" class="btn-control accent" type="button">Autoplay: ON</button>
+									<button id="btn-play-random" class="btn-control" type="button">Play Random</button>
 								</div>
+								<div class="section-title recommend-title">Recommended</div>
+								<div id="recommend-list" class="recommend-list"></div>
+								<div class="section-title recommend-title">Recently Played</div>
+								<div id="recent-list" class="recent-list"></div>
 							</div>
 						</div>
 					</main>
@@ -559,6 +690,9 @@ func main() {
 								<span id="media-count">0 items</span>
 							</div>
 							<div class="playlist-tools">
+								<select id="root-select" class="playlist-select">
+									<option value="">All roots</option>
+								</select>
 								<select id="series-select" class="playlist-select">
 									<option value="">All</option>
 								</select>
@@ -568,7 +702,7 @@ func main() {
 								<button id="btn-shuffle" class="btn-control" type="button">Shuffle</button>
 							</div>
 						</div>
-						<div id="media-list">
+						<div id="media-list" class="media-list">
 							<div class="empty-state">
 								<div class="loading-dot"></div>
 								<div>Scanning media library...</div>
@@ -587,19 +721,30 @@ func main() {
 				const metaCategory = document.getElementById('meta-category');
 				const metaEpisode = document.getElementById('meta-episode');
 				const mediaCount = document.getElementById('media-count');
+				const rootSelect = document.getElementById('root-select');
 				const seriesSelect = document.getElementById('series-select');
 				const typeSelect = document.getElementById('type-select');
 				const searchInput = document.getElementById('search-input');
 				const btnClearSearch = document.getElementById('btn-clear-search');
+				const btnViewList = document.getElementById('btn-view-list');
+				const btnViewGrid = document.getElementById('btn-view-grid');
 				const btnPrev = document.getElementById('btn-prev');
 				const btnNext = document.getElementById('btn-next');
 				const btnAutoplay = document.getElementById('btn-autoplay');
+				const btnPlayRandom = document.getElementById('btn-play-random');
 				const btnShuffle = document.getElementById('btn-shuffle');
+				const recommendList = document.getElementById('recommend-list');
+				const recentList = document.getElementById('recent-list');
 				let mediaData = [];
 				let currentQueue = [];
 				let currentIndex = -1;
 				let autoplayNext = true;
 				let lastPlayedPath = '';
+				let hlsInstance = null;
+				let viewMode = 'list';
+				let recentPaths = [];
+				let recommendationAnchorPath = '';
+				let recommendationPaths = [];
 
 				function esc(input) {
 					return String(input || '')
@@ -626,6 +771,56 @@ func main() {
 					const idx = normalized.lastIndexOf('/');
 					if (idx < 0) return '';
 					return normalized.slice(0, idx);
+				}
+
+				function destroyHls() {
+					if (hlsInstance) {
+						try {
+							hlsInstance.destroy();
+						} catch (_) {}
+						hlsInstance = null;
+					}
+				}
+
+				function playViaHLS(path) {
+					const hlsUrl = '/hls/index.m3u8?path=' + encodeURIComponent(path);
+					destroyHls();
+					if (window.Hls && Hls.isSupported()) {
+						hlsInstance = new Hls({
+							enableWorker: true,
+							lowLatencyMode: false,
+						});
+						hlsInstance.loadSource(hlsUrl);
+						hlsInstance.attachMedia(video);
+						hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+							video.play().catch(function(){});
+						});
+						return;
+					}
+					if (video.canPlayType('application/vnd.apple.mpegurl')) {
+						video.src = hlsUrl;
+						video.load();
+						video.play().catch(function(){});
+					}
+				}
+
+				function playWithFallback(path) {
+					const directUrl = '/stream?path=' + encodeURIComponent(path);
+					destroyHls();
+					video.src = directUrl;
+					video.load();
+					video.play().catch(function(){});
+
+					video.addEventListener('error', function onDirectError() {
+						video.removeEventListener('error', onDirectError);
+						playViaHLS(path);
+					}, { once: true });
+
+					setTimeout(function() {
+						if (video.networkState === video.NETWORK_NO_SOURCE) {
+							playViaHLS(path);
+						}
+					}, 2500);
 				}
 
 				function parseEpisodeNumber(name) {
@@ -666,6 +861,7 @@ func main() {
 
 					const coverBase = parentDir(item.Path || '');
 					const coverPath = coverBase ? (coverBase + '/cover.jpg') : '';
+					const root = String(item.Category || 'General').split('/')[0] || 'General';
 
 					return {
 						raw: item,
@@ -680,6 +876,7 @@ func main() {
 						isJav: isJav,
 						isArtist: isArtist,
 						coverPath: coverPath,
+						root: root,
 					};
 				}
 
@@ -696,8 +893,13 @@ func main() {
 				}
 
 				function rebuildSeriesOptions() {
+					const selectedRoot = rootSelect.value;
 					const seriesSet = {};
-					mediaData.forEach(function(m) { seriesSet[m.series] = true; });
+					mediaData.forEach(function(m) {
+						if (!selectedRoot || m.root === selectedRoot) {
+							seriesSet[m.series] = true;
+						}
+					});
 					const allSeries = Object.keys(seriesSet).sort(function(a, b) {
 						return a.localeCompare(b, undefined, { sensitivity: 'base' });
 					});
@@ -707,6 +909,19 @@ func main() {
 						return '<option value="' + esc(s) + '">' + esc(s) + '</option>';
 					}).join('');
 					seriesSelect.value = allSeries.indexOf(current) >= 0 ? current : '';
+				}
+
+				function rebuildRootOptions() {
+					const rootSet = {};
+					mediaData.forEach(function(m) { rootSet[m.root] = true; });
+					const roots = Object.keys(rootSet).sort(function(a, b) {
+						return a.localeCompare(b, undefined, { sensitivity: 'base' });
+					});
+					const current = rootSelect.value;
+					rootSelect.innerHTML = '<option value="">All roots</option>' + roots.map(function(r) {
+						return '<option value="' + esc(r) + '">' + esc(r) + '</option>';
+					}).join('');
+					rootSelect.value = roots.indexOf(current) >= 0 ? current : '';
 				}
 
 				function rebuildTypeOptions() {
@@ -723,10 +938,14 @@ func main() {
 				}
 
 				function buildQueue() {
+					const selectedRoot = rootSelect.value;
 					const selectedSeries = seriesSelect.value;
 					const selectedType = typeSelect.value;
 					const q = String(searchInput.value || '').trim().toLowerCase();
 					let queue = mediaData.slice();
+					if (selectedRoot) {
+						queue = queue.filter(function(m) { return m.root === selectedRoot; });
+					}
 					if (selectedSeries) {
 						queue = queue.filter(function(m) { return m.series === selectedSeries; });
 					}
@@ -746,9 +965,13 @@ func main() {
 
 				function renderQueue() {
 					if (currentQueue.length === 0) {
+						listDiv.classList.remove('grid');
 						listDiv.innerHTML = '<div class="empty-state">No match for current filters.</div>';
+						renderRecommendations();
+						renderRecent();
 						return;
 					}
+					listDiv.classList.toggle('grid', viewMode === 'grid');
 
 					listDiv.innerHTML = currentQueue.map(function(m, i) {
 						const ep = m.episodeNo !== null ? ('EP ' + m.episodeNo) : 'EP -';
@@ -779,6 +1002,132 @@ func main() {
 					if (activeEl) {
 						activeEl.scrollIntoView({ block: 'nearest' });
 					}
+					renderRecommendations();
+					renderRecent();
+				}
+
+				function sampleRecommendations(limit) {
+					const activePath = (currentIndex >= 0 && currentQueue[currentIndex]) ? currentQueue[currentIndex].path : lastPlayedPath;
+					let pool = currentQueue.slice();
+					if (activePath) {
+						const active = currentQueue.find(function(m) { return m.path === activePath; });
+						if (active) {
+							const sameSeries = pool.filter(function(m) { return m.path !== activePath && m.series === active.series; });
+							const sameCategory = pool.filter(function(m) { return m.path !== activePath && m.category === active.category; });
+							const sameType = pool.filter(function(m) { return m.path !== activePath && m.type === active.type; });
+							const mix = sameSeries.concat(sameCategory, sameType, pool);
+							const seen = {};
+							pool = mix.filter(function(m) {
+								if (m.path === activePath || seen[m.path]) return false;
+								seen[m.path] = true;
+								return true;
+							});
+						}
+					}
+					if (pool.length === 0) {
+						pool = currentQueue.filter(function(m) { return m.path !== activePath; });
+					}
+					for (let i = pool.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						const tmp = pool[i];
+						pool[i] = pool[j];
+						pool[j] = tmp;
+					}
+					return pool.slice(0, limit);
+				}
+
+				function refreshRecommendationsForCurrent() {
+					const activePath = (currentIndex >= 0 && currentQueue[currentIndex]) ? currentQueue[currentIndex].path : lastPlayedPath;
+					recommendationAnchorPath = activePath || '';
+					recommendationPaths = sampleRecommendations(8).map(function(m) { return m.path; });
+				}
+
+				function cardThumbHtml(m) {
+					if (m.isJav && m.coverPath) {
+						return '<img class="card-thumb" src="/stream?path=' + encodeURIComponent(m.coverPath) + '" alt="' + esc(m.episodeTitle || m.title) + '" loading="lazy" onerror="this.remove()">';
+					}
+					return '<div class="card-thumb"></div>';
+				}
+
+				function renderRecommendations() {
+					if (!currentQueue.length) {
+						recommendList.innerHTML = '<div class="media-sub">No recommendations yet.</div>';
+						return;
+					}
+					const activePath = (currentIndex >= 0 && currentQueue[currentIndex]) ? currentQueue[currentIndex].path : lastPlayedPath;
+					if (!recommendationPaths.length || recommendationAnchorPath !== activePath) {
+						refreshRecommendationsForCurrent();
+					}
+					const map = {};
+					mediaData.forEach(function(m) { map[m.path] = m; });
+					const picks = recommendationPaths.map(function(p) { return map[p]; }).filter(Boolean).slice(0, 8);
+					recommendList.innerHTML = picks.map(function(m) {
+						const kind = m.isJav ? 'JAV' : (m.isArtist ? 'Artist' : 'Episode');
+						return '' +
+							'<button class="recommend-card" data-rec-path="' + esc(m.path) + '">' +
+								cardThumbHtml(m) +
+								'<div class="card-kind">' + esc(kind) + '</div>' +
+								'<div class="recommend-name">' + esc(m.episodeTitle || m.title) + '</div>' +
+								'<div class="recommend-meta">' + esc(m.series || m.category || '-') + '</div>' +
+							'</button>';
+					}).join('');
+					document.querySelectorAll('.recommend-card').forEach(function(el) {
+						el.addEventListener('click', function() {
+							const path = el.getAttribute('data-rec-path');
+							const idx = currentQueue.findIndex(function(m) { return m.path === path; });
+							if (idx >= 0) {
+								selectItemByQueueIndex(idx);
+								return;
+							}
+							const globalIdx = mediaData.findIndex(function(m) { return m.path === path; });
+							if (globalIdx >= 0) {
+								applySelected(mediaData[globalIdx]);
+							}
+						});
+					});
+				}
+
+				function markRecentPlayed(path) {
+					if (!path) return;
+					recentPaths = recentPaths.filter(function(p) { return p !== path; });
+					recentPaths.unshift(path);
+					if (recentPaths.length > 18) {
+						recentPaths = recentPaths.slice(0, 18);
+					}
+				}
+
+				function renderRecent() {
+					if (!recentPaths.length) {
+						recentList.innerHTML = '<div class="media-sub">No recent plays yet.</div>';
+						return;
+					}
+					const map = {};
+					mediaData.forEach(function(m) { map[m.path] = m; });
+					const items = recentPaths.map(function(p) { return map[p]; }).filter(Boolean).slice(0, 10);
+					recentList.innerHTML = items.map(function(m) {
+						const kind = m.isJav ? 'JAV' : (m.isArtist ? 'Artist' : 'Episode');
+						return '' +
+							'<button class="recent-card" data-recent-path="' + esc(m.path) + '">' +
+								cardThumbHtml(m) +
+								'<div class="card-kind">' + esc(kind) + '</div>' +
+								'<div class="recent-name">' + esc(m.episodeTitle || m.title) + '</div>' +
+								'<div class="recent-meta">' + esc(m.series || m.category || '-') + '</div>' +
+							'</button>';
+					}).join('');
+					document.querySelectorAll('.recent-card').forEach(function(el) {
+						el.addEventListener('click', function() {
+							const p = el.getAttribute('data-recent-path');
+							const idx = currentQueue.findIndex(function(m) { return m.path === p; });
+							if (idx >= 0) {
+								selectItemByQueueIndex(idx);
+								return;
+							}
+							const globalIdx = mediaData.findIndex(function(m) { return m.path === p; });
+							if (globalIdx >= 0) {
+								applySelected(mediaData[globalIdx]);
+							}
+						});
+					});
 				}
 
 				function syncActiveFromPath(path) {
@@ -812,10 +1161,17 @@ func main() {
 					metaCategory.textContent = (m.category || '-').toUpperCase();
 					metaEpisode.textContent = m.isJav ? 'CODE' : (m.isArtist ? 'CLIP' : (m.episodeNo !== null ? ('EP ' + m.episodeNo) : 'EP -'));
 					lastPlayedPath = m.path;
+					markRecentPlayed(m.path);
+					refreshRecommendationsForCurrent();
+					playWithFallback(m.path);
+					renderRecommendations();
+					renderRecent();
+				}
 
-					video.src = '/stream?path=' + encodeURIComponent(m.path);
-					video.load();
-					video.play().catch(function(){});
+				function playRandom() {
+					if (!currentQueue.length) return;
+					const idx = Math.floor(Math.random() * currentQueue.length);
+					selectItemByQueueIndex(idx);
 				}
 
 				function playNext() {
@@ -876,6 +1232,7 @@ func main() {
 						const previousPath = lastPlayedPath || (video.src ? decodeURIComponent((video.src.split('path=')[1] || '').split('&')[0] || '') : '');
 
 						mediaData = data.map(normalizeMedia);
+						rebuildRootOptions();
 						rebuildSeriesOptions();
 						rebuildTypeOptions();
 						buildQueue();
@@ -898,7 +1255,20 @@ func main() {
 
 				btnPrev.addEventListener('click', playPrev);
 				btnNext.addEventListener('click', playNext);
+				btnPlayRandom.addEventListener('click', playRandom);
 				btnShuffle.addEventListener('click', shuffleQueue);
+				btnViewList.addEventListener('click', function() {
+					viewMode = 'list';
+					btnViewList.classList.add('accent');
+					btnViewGrid.classList.remove('accent');
+					renderQueue();
+				});
+				btnViewGrid.addEventListener('click', function() {
+					viewMode = 'grid';
+					btnViewGrid.classList.add('accent');
+					btnViewList.classList.remove('accent');
+					renderQueue();
+				});
 				btnAutoplay.addEventListener('click', function() {
 					autoplayNext = !autoplayNext;
 					btnAutoplay.textContent = autoplayNext ? 'Autoplay: ON' : 'Autoplay: OFF';
@@ -906,6 +1276,15 @@ func main() {
 				video.addEventListener('ended', function() {
 					if (autoplayNext) {
 						playNext();
+					}
+				});
+				rootSelect.addEventListener('change', function() {
+					rebuildSeriesOptions();
+					buildQueue();
+					currentIndex = currentQueue.length > 0 ? 0 : -1;
+					renderQueue();
+					if (currentIndex >= 0) {
+						selectItemByQueueIndex(currentIndex);
 					}
 				});
 				seriesSelect.addEventListener('change', function() {
