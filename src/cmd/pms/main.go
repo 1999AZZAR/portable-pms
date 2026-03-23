@@ -40,9 +40,21 @@ func main() {
 
 	// 2. Start Scanner (Async)
 	go func() {
-		s := scanner.New(absPath, database)
-		s.Start()
+		// Skip scan if metadata already exists
+		if _, err := os.Stat(filepath.Join(metaDir, "scan_done")); os.IsNotExist(err) {
+			fmt.Println("🔍 Scanning for media (first run)...")
+			s := scanner.New(absPath, database)
+			if err := s.Start(); err != nil {
+				fmt.Printf("❌ Scan error: %v\n", err)
+			}
+			// Create sentinel file
+			_ = os.WriteFile(filepath.Join(metaDir, "scan_done"), []byte("done"), 0644)
+			fmt.Println("✅ Scan complete, sentinel created")
+		} else {
+			fmt.Println("🔄 Skipping scan – metadata cached")
+		}
 	}()
+
 
 	// 3. API Endpoints
 	http.HandleFunc("/api/media", func(w http.ResponseWriter, r *http.Request) {
