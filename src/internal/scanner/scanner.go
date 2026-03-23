@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"github.com/1999AZZAR/portable-pms/src/internal/db"
 )
 
 type Scanner struct {
@@ -27,6 +25,11 @@ func (s *Scanner) Start() error {
 	err := filepath.Walk(s.RootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
+		}
+
+		// Skip hidden folders like .metadata
+		if info.IsDir() && strings.HasPrefix(info.Name(), ".") {
+			return filepath.SkipDir
 		}
 
 		if !info.IsDir() && extensions[strings.ToLower(filepath.Ext(path))] {
@@ -51,28 +54,31 @@ func (s *Scanner) processFile(path string, info os.FileInfo) {
 	category := "General"
 	title := info.Name()
 
-	// Tri-Pattern Discovery Logic
+	// Enhanced Pattern Discovery based on drive structure
 	if len(parts) > 1 {
 		category = parts[0]
-		switch strings.ToLower(category) {
-		case "movie", "movies":
-			mediaType = "movie"
-			if len(parts) >= 2 {
-				title = parts[len(parts)-2] // Folder name is usually the title
-			}
-		case "artis", "artist", "music":
-			mediaType = "artist"
-			if len(parts) >= 2 {
-				title = parts[len(parts)-2] // Artist name or album
-			}
+		
+		// If nested (e.g., NFSW/ANIMATION/Title/file.mp4)
+		if len(parts) >= 3 {
+			// Second level as category, third level as title
+			category = fmt.Sprintf("%s/%s", parts[0], parts[1])
+			title = parts[len(parts)-2]
+			mediaType = "collection"
+		} else if len(parts) == 2 {
+			// First level as category, folder as title
+			title = parts[0]
+			mediaType = "video"
 		}
 	}
+
+	// Clean up title (remove extension and common noise if needed)
+	title = strings.TrimSuffix(title, filepath.Ext(title))
 
 	_, err := s.DB.Exec("INSERT OR REPLACE INTO media (path, type, category, title, size) VALUES (?, ?, ?, ?, ?)",
 		path, mediaType, category, title, info.Size())
 	if err != nil {
 		fmt.Printf("❌ Error indexing %s: %v\n", path, err)
 	} else {
-		fmt.Printf("✅ Indexed: [%s] %s\n", mediaType, title)
+		fmt.Printf("✅ Indexed: [%s] %s\n", category, title)
 	}
 }

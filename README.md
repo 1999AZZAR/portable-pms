@@ -31,32 +31,24 @@ All application state, including the SQLite database and transcoded segments, ar
 
 ## Setup and Usage
 
-### 1. Build from Source
-Ensure Go 1.21+ is installed.
+### 1. Compilation
+Ensure Go 1.21+ is installed. Run the following command to download dependencies and build the binary:
 ```bash
+go mod tidy
 go build -o bin/pms src/cmd/pms/main.go
 ```
 
-### 2. Portable Deployment
-Copy the generated `bin/pms` binary and the `web/static/` directory to your external storage.
-Example structure:
-```text
-/ExternalStorage/
-  ├── pms (binary)
-  ├── web/static/
-  └── MyVideos/ (source media)
-```
+### 2. Deployment
+Place the `bin/pms` binary and the `web/` directory at the root of your external drive.
 
 ### 3. Execution
-Run the binary with the `--path` flag pointing to your media directory.
+Run the binary with the `--path` flag. We recommend using a relative path like `.` if the binary is at the root of your drive.
 ```bash
-./pms --path /path/to/media --port 8080
+./bin/pms --path /path/to/media --port 8080
 ```
 
 ### 4. Access
-Navigate to the server address in any browser:
-*   **Local Host**: `http://localhost:8080`
-*   **Network Access**: `http://[HOST_IP]:8080`
+Open `http://localhost:8080` in your browser.
 
 ## API Reference
 *   `GET /api/media`: Returns a JSON array of indexed media metadata.
