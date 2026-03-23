@@ -1,0 +1,24 @@
+# Binaries
+bin/
+pms
+
+# Local configs and temporary files
+.env
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+.metadata/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Go coverage and testing
+*.out
+*.test
