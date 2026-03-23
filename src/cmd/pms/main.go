@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/1999AZZAR/portable-pms/src/internal/db"
 	"github.com/1999AZZAR/portable-pms/src/internal/scanner"
@@ -35,7 +34,7 @@ func main() {
 
 	st := streamer.New(absPath)
 
-	fmt.Printf("🚀 Starting Portable Media Streamer\n")
+	fmt.Printf("🚀 Starting Portable Media Streamer (Offline Ready)\n")
 	fmt.Printf("📂 Media Path: %s\n", absPath)
 	fmt.Printf("🌐 Address: http://localhost:%d\n", *port)
 
@@ -66,17 +65,22 @@ func main() {
 		json.NewEncoder(w).Encode(list)
 	})
 
-	// 4. Streaming Endpoints
+	// 4. Streaming & Static Endpoints
 	http.HandleFunc("/stream", st.ServeMedia)
-	
-	// Handle /hls/ and its sub-paths
-	http.HandleFunc("/hls/", func(w http.ResponseWriter, r *http.Request) {
-		// Example: /hls/index.m3u8?path=videos/test.mp4
-		// Or subsequent: /hls/seg_001.ts?path=videos/test.mp4
-		st.ServeHLS(w, r)
-	})
+	http.HandleFunc("/hls/", st.ServeHLS)
 
-	// 5. Minimal UI
+	// Serve local assets from the current directory (for portability)
+	executable, _ := os.Executable()
+	baseDir := filepath.Dir(executable)
+	// Fallback to source dir if running via go run
+	if _, err := os.Stat(filepath.Join(baseDir, "web", "static")); os.IsNotExist(err) {
+		baseDir, _ = os.Getwd()
+	}
+
+	staticDir := filepath.Join(baseDir, "web", "static")
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
+
+	// 5. Offline UI
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
@@ -85,14 +89,14 @@ func main() {
 		html := `
 		<!DOCTYPE html>
 		<html>
-		<head><title>PMS Player</title>
-		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-		<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+		<head><title>PMS Player (Offline)</title>
+		<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+		<script src="/static/js/hls.min.js"></script>
 		<style>body{background:#121212;color:#eee} .card{background:#1e1e1e;color:#fff;margin-bottom:10px}</style>
 		</head>
 		<body class="p-4">
 			<div class="container">
-				<h2 class="mb-4">🚀 Portable Media Streamer</h2>
+				<h2 class="mb-4">🚀 Portable Media Streamer (Offline)</h2>
 				<div class="row">
 					<div class="col-md-4" id="list">Loading...</div>
 					<div class="col-md-8">
@@ -107,19 +111,22 @@ func main() {
 				const status = document.getElementById('status');
 
 				async function loadMedia() {
-					const res = await fetch('/api/media');
-					const data = await res.json();
-					listDiv.innerHTML = data.map(m => ` + "`" + `
-						<div class="card p-2" onclick="playHLS('${m.Path}')" style="cursor:pointer">
-							<strong>${m.Title}</strong><br><small class="text-secondary">${m.Category} | ${m.Type}</small>
-						</div>
-					` + "`" + `).join('');
+					try {
+						const res = await fetch('/api/media');
+						const data = await res.json();
+						if(!data) { listDiv.innerHTML = "No media found."; return; }
+						listDiv.innerHTML = data.map(m => ` + "`" + `
+							<div class="card p-2" onclick="playHLS('${m.Path}')" style="cursor:pointer">
+								<strong>${m.Title}</strong><br><small class="text-secondary">${m.Category} | ${m.Type}</small>
+							</div>
+						` + "`" + `).join('');
+					} catch(e) { listDiv.innerHTML = "Error loading media."; }
 				}
 
 				function playHLS(path) {
 					const hlsUrl = '/hls/index.m3u8?path=' + encodeURIComponent(path);
 					status.innerText = 'Playing: ' + path;
-					if (Hls.isSupported()) {
+					if (window.Hls && Hls.isSupported()) {
 						const hls = new Hls();
 						hls.loadSource(hlsUrl);
 						hls.attachMedia(video);
@@ -127,6 +134,8 @@ func main() {
 					} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
 						video.src = hlsUrl;
 						video.onloadedmetadata = () => video.play();
+					} else {
+						alert("HLS not supported in this browser.");
 					}
 				}
 				loadMedia();
