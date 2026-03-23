@@ -12,6 +12,7 @@ import (
 type Scanner struct {
 	RootPath string
 	DB       *sql.DB
+	mu       sync.Mutex // protect DB writes
 }
 
 func New(root string, database *sql.DB) *Scanner {
@@ -57,25 +58,24 @@ func (s *Scanner) processFile(path string, info os.FileInfo) {
 	// Enhanced Pattern Discovery based on drive structure
 	if len(parts) > 1 {
 		category = parts[0]
-		
-		// If nested (e.g., NFSW/ANIMATION/Title/file.mp4)
 		if len(parts) >= 3 {
-			// Second level as category, third level as title
 			category = fmt.Sprintf("%s/%s", parts[0], parts[1])
 			title = parts[len(parts)-2]
 			mediaType = "collection"
 		} else if len(parts) == 2 {
-			// First level as category, folder as title
 			title = parts[0]
 			mediaType = "video"
 		}
 	}
 
-	// Clean up title (remove extension and common noise if needed)
 	title = strings.TrimSuffix(title, filepath.Ext(title))
 
+	// Serialize DB write to avoid lock contention
+	s.mu.Lock()
 	_, err := s.DB.Exec("INSERT OR REPLACE INTO media (path, type, category, title, size) VALUES (?, ?, ?, ?, ?)",
 		path, mediaType, category, title, info.Size())
+	s.mu.Unlock()
+
 	if err != nil {
 		fmt.Printf("❌ Error indexing %s: %v\n", path, err)
 	} else {
