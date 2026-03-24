@@ -567,19 +567,21 @@ func main() {
 					flex-direction: column;
 				}
 
-				.media-item {
-					display: block;
-					width: 100%;
-					border: 1px solid #3a3d45;
-					background: linear-gradient(180deg, #20232b 0%, #171a20 100%);
-					color: var(--text);
-					text-align: left;
-					border-radius: 14px;
-					padding: 10px;
-					margin: 0 0 8px;
-					cursor: pointer;
-					transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
-				}
+		.media-item {
+			display: block;
+			width: 100%;
+			border: 1px solid #3a3d45;
+			background: linear-gradient(180deg, #20232b 0%, #171a20 100%);
+			color: var(--text);
+			text-align: left;
+			border-radius: 14px;
+			padding: 10px;
+			margin: 0 0 8px;
+			cursor: pointer;
+			transition: background var(--transition-standard), border-color var(--transition-standard), transform var(--transition-quick);
+			position: relative;
+			overflow: hidden;
+		}
 
 				.media-list.grid {
 					display: grid;
@@ -1195,75 +1197,184 @@ func main() {
 				display: flex;
 			}
 
-				body {
-					overflow: auto;
-				}
-
-				.app-shell {
-					padding: 8px;
-					height: auto;
-					min-height: calc(100vh - var(--bottom-nav-height));
-				}
-
-				.topbar {
-					padding: 10px;
-					border-radius: 12px;
-				}
-
-				.search-wrap {
-					max-width: none;
-					min-width: 0;
-				}
-
-				.player-wrap {
-					padding: 10px;
-					position: relative;
-					touch-action: pan-y pinch-zoom;
-				}
-
-				.video-frame {
-					border-radius: 10px;
-					position: relative;
-				}
-
-				.playlist-tools {
-					grid-template-columns: 1fr;
-					display: none;
-				}
-
-				.sidebar-head {
-					padding-bottom: 0;
-				}
-
-				.recommend-card,
-				.recent-card {
-					min-width: 180px;
-					max-width: 220px;
-				}
-
-				.card-thumb {
-					border-radius: 8px;
-				}
-
-				.control-row {
-					display: grid;
-					grid-template-columns: repeat(2, 1fr);
-					gap: 12px;
-				}
-
-				.control-row .btn-control {
-					width: 100%;
-				}
-
-				aside.panel {
-					order: -1;
-					margin-bottom: 16px;
-				}
-
-				#media-list {
-					max-height: 50vh;
-				}
+			body {
+				overflow: auto;
+				height: auto;
+				min-height: 100vh;
 			}
+
+			.app-shell {
+				padding: 8px 0 0 0;
+				height: auto;
+				min-height: calc(100vh - var(--bottom-nav-height));
+				padding-bottom: var(--bottom-nav-height);
+			}
+
+			.topbar {
+				padding: 10px;
+				border-radius: 12px;
+				margin: 0 8px 12px 8px;
+			}
+
+			.search-wrap {
+				max-width: none;
+				min-width: 0;
+			}
+
+			.layout {
+				grid-template-columns: 1fr;
+				gap: 12px;
+				height: auto;
+				min-height: auto;
+			}
+
+			main.panel {
+				margin: 0 8px;
+				border-radius: 16px;
+			}
+
+			aside.panel {
+				margin: 0 8px;
+				border-radius: 16px;
+				max-height: 70vh;
+			}
+
+			.player-wrap {
+				padding: 12px;
+				position: relative;
+				touch-action: pan-y pinch-zoom;
+			}
+
+			.video-frame {
+				border-radius: 12px;
+				position: relative;
+				margin-bottom: 16px;
+			}
+
+			.now-playing {
+				padding: 12px 4px;
+			}
+
+			.now-playing h1 {
+				font-size: 1.25rem;
+				margin-bottom: 8px;
+			}
+
+			.now-playing p {
+				font-size: 0.9rem;
+			}
+
+			.meta-row {
+				flex-wrap: wrap;
+				gap: 6px;
+				margin-top: 12px;
+			}
+
+			.meta-chip {
+				font-size: 0.7rem;
+				padding: 4px 8px;
+			}
+
+			.control-row {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 10px;
+				margin-top: 16px;
+			}
+
+			.control-row .btn-control {
+				width: 100%;
+				padding: 14px 12px;
+				font-size: 0.9rem;
+			}
+
+			.section-title {
+				font-size: 0.8rem;
+				margin-top: 20px;
+				margin-bottom: 12px;
+			}
+
+			.recommend-list,
+			.recent-list {
+				margin-left: -12px;
+				margin-right: -12px;
+				padding-left: 12px;
+				padding-right: 12px;
+			}
+
+			.recommend-card,
+			.recent-card {
+				min-width: 200px;
+				max-width: 240px;
+			}
+
+			.card-thumb {
+				border-radius: 10px;
+			}
+
+			.sidebar-head {
+				padding: 12px;
+				position: sticky;
+				top: 0;
+				z-index: 10;
+			}
+
+			.sidebar-head h2 {
+				font-size: 1rem;
+			}
+
+			#media-count {
+				font-size: 0.75rem;
+				padding: 4px 10px;
+			}
+
+			.playlist-tools {
+				display: none;
+			}
+
+			#media-list {
+				padding: 8px;
+				max-height: none;
+				overflow-y: auto;
+			}
+
+			.media-list.grid {
+				grid-template-columns: 1fr;
+				gap: 8px;
+			}
+
+			.media-item {
+				padding: 12px;
+				border-radius: 12px;
+				margin-bottom: 8px;
+			}
+
+			.media-title {
+				font-size: 1rem;
+				margin-bottom: 6px;
+			}
+
+			.media-sub {
+				font-size: 0.85rem;
+			}
+
+			.empty-state {
+				margin: 16px;
+				padding: 32px 20px;
+			}
+
+			aside.panel {
+				display: none;
+			}
+
+			aside.panel.mobile-visible {
+				display: flex;
+			}
+
+			main.panel.mobile-hidden {
+				display: none;
+			}
+		}
 			</style>
 		</head>
 		<body>
@@ -2177,10 +2288,14 @@ func main() {
 			mobileNavPlayer.addEventListener('click', function() {
 				setActiveNav(mobileNavPlayer);
 				if (mainPanel) {
+					mainPanel.classList.remove('mobile-hidden');
 					mainPanel.style.display = 'block';
 					mainPanel.classList.add('view-transition');
 				}
-				if (asidePanel) asidePanel.style.display = 'none';
+				if (asidePanel) {
+					asidePanel.classList.remove('mobile-visible');
+					asidePanel.style.display = 'none';
+				}
 				mobileFilterPanel.classList.remove('show');
 			});
 		}
@@ -2188,8 +2303,12 @@ func main() {
 		if (mobileNavPlaylist) {
 			mobileNavPlaylist.addEventListener('click', function() {
 				setActiveNav(mobileNavPlaylist);
-				if (mainPanel) mainPanel.style.display = 'none';
+				if (mainPanel) {
+					mainPanel.classList.add('mobile-hidden');
+					mainPanel.style.display = 'none';
+				}
 				if (asidePanel) {
+					asidePanel.classList.add('mobile-visible');
 					asidePanel.style.display = 'flex';
 					asidePanel.classList.add('view-transition');
 				}
