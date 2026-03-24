@@ -239,6 +239,7 @@ func main() {
 			--transition-quick: 150ms cubic-bezier(0.2, 0, 0, 1);
 			--transition-standard: 250ms cubic-bezier(0.2, 0, 0, 1);
 			--transition-emphasized: 400ms cubic-bezier(0.2, 0, 0, 1);
+			--controls-timeout: 3000;
 		}
 
 		* {
@@ -424,30 +425,6 @@ func main() {
 					height: 100%;
 					display: block;
 					background: #000;
-				}
-
-				.now-playing {
-					padding: 12px 2px 4px;
-				}
-
-				.now-playing h1 {
-					font-size: clamp(1rem, 1.5vw, 1.18rem);
-					font-weight: 800;
-					margin: 0 0 6px;
-					line-height: 1.35;
-				}
-
-				.now-playing p {
-					color: var(--muted);
-					margin: 0;
-					font-size: clamp(0.8rem, 1.1vw, 0.9rem);
-				}
-
-				.meta-row {
-					display: flex;
-					flex-wrap: wrap;
-					gap: 8px;
-					margin-top: 10px;
 				}
 
 				.control-row {
@@ -1240,39 +1217,198 @@ func main() {
 			}
 
 			.player-wrap {
-				padding: 12px;
-				position: relative;
-				touch-action: pan-y pinch-zoom;
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: var(--bottom-nav-height);
+				padding: 0;
+				background: #000;
+				z-index: 100;
+				touch-action: manipulation;
 			}
 
 			.video-frame {
-				border-radius: 12px;
-				position: relative;
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				border-radius: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin: 0;
+			}
+			
+			.video-frame video {
+				width: 100%;
+				height: 100%;
+				object-fit: contain;
+			}
+			
+			.player-overlay {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.6) 100%);
+				opacity: 1;
+				transition: opacity 0.3s ease;
+				pointer-events: none;
+				z-index: 1;
+			}
+			
+			.player-overlay.hidden {
+				opacity: 0;
+			}
+			
+			.player-top-bar {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				padding: 20px 16px;
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				z-index: 2;
+				pointer-events: auto;
+			}
+			
+			.player-back-btn {
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				background: rgba(0, 0, 0, 0.5);
+				backdrop-filter: blur(8px);
+				border: none;
+				color: #fff;
+				font-size: 1.25rem;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+				transition: transform 0.2s ease;
+			}
+			
+			.player-back-btn:active {
+				transform: scale(0.9);
+			}
+			
+			.player-title-wrap {
+				flex: 1;
+				min-width: 0;
+			}
+			
+			.player-title {
+				color: #fff;
+				font-size: 1rem;
+				font-weight: 700;
+				margin: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+			}
+			
+			.player-subtitle {
+				color: rgba(255, 255, 255, 0.8);
+				font-size: 0.75rem;
+				margin: 2px 0 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+			}
+			
+			.player-bottom-bar {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				padding: 16px;
+				z-index: 2;
+				pointer-events: auto;
+			}
+			
+			.player-controls {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 32px;
 				margin-bottom: 16px;
 			}
-
-			.now-playing {
-				padding: 12px 4px;
+			
+			.player-control-btn {
+				width: 48px;
+				height: 48px;
+				border-radius: 50%;
+				background: rgba(0, 0, 0, 0.5);
+				backdrop-filter: blur(8px);
+				border: none;
+				color: #fff;
+				font-size: 1.5rem;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+				transition: all 0.2s ease;
 			}
-
-			.now-playing h1 {
-				font-size: 1.25rem;
-				margin-bottom: 8px;
+			
+			.player-control-btn:active {
+				transform: scale(0.9);
 			}
-
-			.now-playing p {
-				font-size: 0.9rem;
+			
+			.player-control-btn.play {
+				width: 64px;
+				height: 64px;
+				font-size: 2rem;
+				background: var(--accent);
 			}
-
-			.meta-row {
-				flex-wrap: wrap;
-				gap: 6px;
-				margin-top: 12px;
+			
+			.seek-indicator {
+				position: absolute;
+				top: 50%;
+				transform: translateY(-50%);
+				width: 120px;
+				height: 120px;
+				border-radius: 50%;
+				background: rgba(0, 0, 0, 0.7);
+				backdrop-filter: blur(8px);
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.2s ease;
+				z-index: 3;
 			}
-
-			.meta-chip {
-				font-size: 0.7rem;
-				padding: 4px 8px;
+			
+			.seek-indicator.left {
+				left: 20%;
+			}
+			
+			.seek-indicator.right {
+				right: 20%;
+			}
+			
+			.seek-indicator.show {
+				opacity: 1;
+			}
+			
+			.seek-indicator i {
+				font-size: 2.5rem;
+				color: #fff;
+			}
+			
+			.seek-indicator span {
+				font-size: 1rem;
+				color: #fff;
+				font-weight: 700;
 			}
 
 			.control-row {
@@ -1395,39 +1531,46 @@ func main() {
 
 				<div class="layout">
 					<main class="panel">
-						<div class="player-wrap">
+					<div class="player-wrap mobile-visible">
 					<div class="video-frame">
-						<video id="video-player" controls playsinline preload="metadata"></video>
-						<button class="pip-button" id="pip-button" type="button" title="Picture-in-Picture">
-							<i class="fa-solid fa-up-right-and-down-left-from-center"></i>
-						</button>
-						<div class="swipe-feedback left" id="swipe-left">
-							<i class="fa-solid fa-backward-step"></i>
-						</div>
-						<div class="swipe-feedback right" id="swipe-right">
-							<i class="fa-solid fa-forward-step"></i>
-						</div>
-					</div>
-							<div class="now-playing">
-								<h1 id="now-playing-title">No media selected</h1>
-								<p id="now-playing-meta">Pick an item from the list to start streaming.</p>
-								<div class="meta-row">
-									<span class="meta-chip" id="meta-type">-</span>
-									<span class="meta-chip" id="meta-category">-</span>
-									<span class="meta-chip" id="meta-episode">EP -</span>
+						<video id="video-player" playsinline preload="metadata"></video>
+						
+						<div class="player-overlay" id="player-overlay">
+							<div class="player-top-bar">
+								<button class="player-back-btn" id="player-back-btn">
+									<i class="fa-solid fa-chevron-down"></i>
+								</button>
+								<div class="player-title-wrap">
+									<h2 class="player-title" id="player-overlay-title">Select a video</h2>
+									<p class="player-subtitle" id="player-overlay-subtitle"></p>
 								</div>
-								<div class="control-row">
-									<button id="btn-prev" class="btn-control" type="button">Prev</button>
-									<button id="btn-next" class="btn-control" type="button">Next</button>
-									<button id="btn-autoplay" class="btn-control accent" type="button">Autoplay: ON</button>
-									<button id="btn-play-random" class="btn-control" type="button">Play Random</button>
+							</div>
+							
+							<div class="player-bottom-bar">
+								<div class="player-controls">
+									<button class="player-control-btn" id="player-prev-btn">
+										<i class="fa-solid fa-backward-step"></i>
+									</button>
+									<button class="player-control-btn play" id="player-play-btn">
+										<i class="fa-solid fa-play"></i>
+									</button>
+									<button class="player-control-btn" id="player-next-btn">
+										<i class="fa-solid fa-forward-step"></i>
+									</button>
 								</div>
-								<div class="section-title recommend-title">Recommended</div>
-								<div id="recommend-list" class="recommend-list"></div>
-								<div class="section-title recommend-title">Recently Played</div>
-								<div id="recent-list" class="recent-list"></div>
 							</div>
 						</div>
+						
+						<div class="seek-indicator left" id="seek-left">
+							<i class="fa-solid fa-backward-fast"></i>
+							<span>-10s</span>
+						</div>
+						<div class="seek-indicator right" id="seek-right">
+							<i class="fa-solid fa-forward-fast"></i>
+							<span>+10s</span>
+						</div>
+					</div>
+					</div>
 					</main>
 
 					<aside class="panel">
@@ -1512,30 +1655,67 @@ func main() {
 			<script>
 				const video = document.getElementById('video-player');
 				const listDiv = document.getElementById('media-list');
-				const playTitle = document.getElementById('now-playing-title');
-				const playMeta = document.getElementById('now-playing-meta');
-				const metaType = document.getElementById('meta-type');
-				const metaCategory = document.getElementById('meta-category');
-				const metaEpisode = document.getElementById('meta-episode');
+				const playerOverlay = document.getElementById('player-overlay');
+				const playerOverlayTitle = document.getElementById('player-overlay-title');
+				const playerOverlaySubtitle = document.getElementById('player-overlay-subtitle');
+				const playerBackBtn = document.getElementById('player-back-btn');
+				const playerPlayBtn = document.getElementById('player-play-btn');
+				const playerPrevBtn = document.getElementById('player-prev-btn');
+				const playerNextBtn = document.getElementById('player-next-btn');
+				const seekLeft = document.getElementById('seek-left');
+				const seekRight = document.getElementById('seek-right');
 				const mediaCount = document.getElementById('media-count');
 				const rootSelect = document.getElementById('root-select');
 				const seriesSelect = document.getElementById('series-select');
 				const typeSelect = document.getElementById('type-select');
 				const searchInput = document.getElementById('search-input');
 				const btnClearSearch = document.getElementById('btn-clear-search');
-				const btnPrev = document.getElementById('btn-prev');
-				const btnNext = document.getElementById('btn-next');
-				const btnAutoplay = document.getElementById('btn-autoplay');
-				const btnPlayRandom = document.getElementById('btn-play-random');
-				const btnShuffle = document.getElementById('btn-shuffle');
-				const recommendList = document.getElementById('recommend-list');
-				const recentList = document.getElementById('recent-list');
 			let mediaData = [];
 			let currentQueue = [];
 			let currentIndex = -1;
 			let autoplayNext = true;
 			let lastPlayedPath = '';
 			let hlsInstance = null;
+			let controlsTimeout;
+			let lastTap = 0;
+			let hideControlsDelay = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--controls-timeout'));
+			
+			function showControls() {
+				playerOverlay.classList.remove('hidden');
+				clearTimeout(controlsTimeout);
+				controlsTimeout = setTimeout(() => {
+					if (!video.paused) {
+						playerOverlay.classList.add('hidden');
+					}
+				}, hideControlsDelay);
+			}
+			
+			function hideControls() {
+				playerOverlay.classList.add('hidden');
+				clearTimeout(controlsTimeout);
+			}
+			
+			function togglePlayPause() {
+				if (video.paused) {
+					video.play();
+					playerPlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+				} else {
+					video.pause();
+					playerPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+				}
+			}
+			
+			function seekVideo(seconds) {
+				video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+			}
+			
+			function showSeekIndicator(direction) {
+				const indicator = direction === 'left' ? seekLeft : seekRight;
+				indicator.classList.add('show');
+				setTimeout(() => {
+					indicator.classList.remove('show');
+				}, 500);
+			}
 			let recentPaths = [];
 			let recommendationAnchorPath = '';
 			let recommendationPaths = [];
@@ -1985,17 +2165,13 @@ func main() {
 				}
 
 				function applySelected(m) {
-					playTitle.textContent = m.episodeTitle || m.title || 'Untitled';
-					playMeta.textContent = (m.series || '-') + ' / ' + (m.type || '-');
-					metaType.textContent = (m.type || '-').toUpperCase();
-					metaCategory.textContent = (m.category || '-').toUpperCase();
-					metaEpisode.textContent = m.isJav ? 'CODE' : (m.isArtist ? 'CLIP' : (m.episodeNo !== null ? ('EP ' + m.episodeNo) : 'EP -'));
+					playerOverlayTitle.textContent = m.episodeTitle || m.title || 'Untitled';
+					const subtitle = (m.series || '-') + ' / ' + (m.type || '-');
+					playerOverlaySubtitle.textContent = subtitle;
 					lastPlayedPath = m.path;
 					markRecentPlayed(m.path);
 					refreshRecommendationsForCurrent();
 					playWithFallback(m.path);
-					renderRecommendations();
-					renderRecent();
 				}
 
 				function playRandom() {
@@ -2085,14 +2261,86 @@ func main() {
 					}
 				}
 
-				btnPrev.addEventListener('click', playPrev);
-				btnNext.addEventListener('click', playNext);
-				btnPlayRandom.addEventListener('click', playRandom);
-				btnShuffle.addEventListener('click', shuffleQueue);
-				btnAutoplay.addEventListener('click', function() {
-					autoplayNext = !autoplayNext;
-					btnAutoplay.textContent = autoplayNext ? 'Autoplay: ON' : 'Autoplay: OFF';
+				
+				playerPlayBtn.addEventListener('click', togglePlayPause);
+				playerBackBtn.addEventListener('click', () => {
+					document.querySelector('.mobile-nav-btn[data-view="playlist"]').click();
 				});
+				playerPrevBtn.addEventListener('click', () => playPrev());
+				playerNextBtn.addEventListener('click', () => playNext());
+				
+				video.addEventListener('play', () => {
+					playerPlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+					showControls();
+				});
+				
+				video.addEventListener('pause', () => {
+					playerPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+					showControls();
+				});
+				
+				video.addEventListener('click', (e) => {
+					e.stopPropagation();
+				});
+				
+				playerOverlay.parentElement.addEventListener('click', (e) => {
+					const now = Date.now();
+					const timeSinceLastTap = now - lastTap;
+					const rect = video.getBoundingClientRect();
+					const clickX = e.clientX - rect.left;
+					const clickWidth = rect.width;
+					
+					if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+						e.preventDefault();
+						if (clickX < clickWidth / 3) {
+							seekVideo(-10);
+							showSeekIndicator('left');
+							triggerHaptic('medium');
+						} else if (clickX > (clickWidth * 2) / 3) {
+							seekVideo(10);
+							showSeekIndicator('right');
+							triggerHaptic('medium');
+						} else {
+							togglePlayPause();
+							triggerHaptic('light');
+						}
+						lastTap = 0;
+					} else {
+						if (playerOverlay.classList.contains('hidden')) {
+							showControls();
+						} else {
+							hideControls();
+						}
+						lastTap = now;
+					}
+				});
+				
+				video.addEventListener('touchmove', showControls);
+				
+				let touchStartY = 0;
+				let touchStartX = 0;
+				
+				document.querySelector('.video-frame').addEventListener('touchstart', (e) => {
+					touchStartY = e.touches[0].clientY;
+					touchStartX = e.touches[0].clientX;
+				}, { passive: true });
+				
+				document.querySelector('.video-frame').addEventListener('touchend', (e) => {
+					const touchEndY = e.changedTouches[0].clientY;
+					const touchEndX = e.changedTouches[0].clientX;
+					const deltaY = touchStartY - touchEndY;
+					const deltaX = touchStartX - touchEndX;
+					
+					if (Math.abs(deltaY) > 100 && Math.abs(deltaY) > Math.abs(deltaX)) {
+						triggerHaptic('medium');
+						if (deltaY > 0) {
+							playNext();
+						} else {
+							playPrev();
+						}
+					}
+				}, { passive: true });
+				
 				video.addEventListener('ended', function() {
 					if (autoplayNext) {
 						playNext();
@@ -2194,52 +2442,6 @@ func main() {
 			btn.addEventListener('click', createRipple);
 		});
 
-		function handleTouchStart(e) {
-			touchStartX = e.changedTouches[0].screenX;
-			touchStartY = e.changedTouches[0].screenY;
-		}
-
-		function handleTouchMove(e) {
-			touchEndX = e.changedTouches[0].screenX;
-			touchEndY = e.changedTouches[0].screenY;
-			
-			const deltaX = touchEndX - touchStartX;
-			const deltaY = touchEndY - touchStartY;
-			
-			if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
-				if (deltaX > 0 && swipeLeft) {
-					swipeLeft.classList.add('show');
-					swipeRight.classList.remove('show');
-				} else if (deltaX < 0 && swipeRight) {
-					swipeRight.classList.add('show');
-					swipeLeft.classList.remove('show');
-				}
-			}
-		}
-
-		function handleTouchEnd() {
-			if (swipeLeft) swipeLeft.classList.remove('show');
-			if (swipeRight) swipeRight.classList.remove('show');
-			
-			const deltaX = touchEndX - touchStartX;
-			const deltaY = touchEndY - touchStartY;
-			
-			if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
-				triggerHaptic('medium');
-				if (deltaX > 0) {
-					playPrev();
-				} else {
-					playNext();
-				}
-			}
-		}
-
-		if (videoFrame) {
-			videoFrame.addEventListener('touchstart', handleTouchStart, { passive: true });
-			videoFrame.addEventListener('touchmove', handleTouchMove, { passive: true });
-			videoFrame.addEventListener('touchend', handleTouchEnd, { passive: true });
-		}
-
 		// Mobile bottom navigation
 		const mobileNavPlayer = document.getElementById('mobile-nav-player');
 		const mobileNavPlaylist = document.getElementById('mobile-nav-playlist');
@@ -2250,25 +2452,6 @@ func main() {
 		const mainPanel = document.querySelector('main.panel');
 		const asidePanel = document.querySelector('aside.panel');
 		const fabPlayRandom = document.getElementById('fab-play-random');
-		const pipButton = document.getElementById('pip-button');
-
-		// Picture-in-Picture
-		if (pipButton && video && document.pictureInPictureEnabled) {
-			pipButton.addEventListener('click', async function() {
-				try {
-					if (document.pictureInPictureElement) {
-						await document.exitPictureInPicture();
-					} else {
-						await video.requestPictureInPicture();
-						triggerHaptic('light');
-					}
-				} catch (err) {
-					console.error('PiP error:', err);
-				}
-			});
-		} else if (pipButton) {
-			pipButton.style.display = 'none';
-		}
 
 		// FAB
 		if (fabPlayRandom) {

@@ -1,5 +1,68 @@
 # Changelog
 
+## v1.4.0 - Professional Streaming UI (Research-Driven)
+
+### Mobile Video Player Redesign
+
+Based on comprehensive research of YouTube (2026), Netflix (2026), Material Design 3, and mobile UX best practices.
+
+**Fullscreen-First Player**:
+- Player takes full viewport on mobile
+- Immersive viewing experience
+- Proper portrait aspect ratio handling
+- Black background for cinematic feel
+
+**Auto-Hiding Controls**:
+- Controls fade after 3 seconds of inactivity
+- Reappear on tap
+- Persist when video is paused
+- Configurable timeout via CSS variable
+
+**Double-Tap to Seek**:
+- Tap left third → seek -10 seconds
+- Tap center third → toggle play/pause
+- Tap right third → seek +10 seconds
+- Visual seek indicators with icons
+- Haptic feedback on interaction
+
+**Vertical Swipe Navigation**:
+- Swipe up → play next video
+- Swipe down → play previous video
+- TikTok-style interaction pattern
+- 100px minimum swipe threshold
+- Haptic feedback on navigation
+
+**Semi-Transparent Overlays**:
+- Gradient overlay (rgba 0,0,0,0.6)
+- Backdrop blur effects
+- Top bar with back button and title
+- Bottom bar with playback controls
+
+**Touch-Optimized Controls**:
+- 48x48px minimum touch targets
+- 64x64px play/pause button
+- 32px spacing between controls
+- Ripple effects on tap
+- Proper active states
+
+### Performance Improvements
+
+- Passive event listeners for better scroll performance
+- Hardware-accelerated animations (60fps)
+- GPU-accelerated backdrop blur
+- Debounced control hiding
+- Reduced CPU usage
+
+### User Experience
+
+- Professional streaming app feel
+- Material You design language
+- Gesture-based navigation
+- Clear visual feedback
+- Accessible touch targets
+
+See PROFESSIONAL_STREAMING_UI.md for detailed research and implementation.
+
 ## v1.1.0 - Stability and Reliability Improvements
 
 ### Critical Fixes

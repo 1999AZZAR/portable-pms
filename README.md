@@ -11,13 +11,15 @@ A zero-dependency media streaming service designed for **true portability**. PMS
 *   **No Installation**: Plug in, run, unplug - no trace left on host
 *   **Drive-Safe**: Graceful shutdown with WAL-mode SQLite for data integrity
 
-### Mobile-First Design (v1.2.0)
-*   **Bottom Navigation**: Native app-like navigation bar for one-handed use
-*   **Swipe Gestures**: Swipe left/right on video for prev/next track
-*   **Touch-Optimized**: 48x48px minimum touch targets (WCAG AAA)
-*   **Pull-to-Refresh**: Pull down playlist to refresh library
-*   **Filter Panel**: Slide-up mobile filter modal with large touch targets
-*   **PWA-Ready**: Install as progressive web app on mobile devices
+### Mobile-First Design (v1.4.0)
+*   **Professional Streaming UI**: Fullscreen player based on YouTube/Netflix 2026 design
+*   **Auto-Hiding Controls**: Controls fade after 3s, reappear on tap
+*   **Double-Tap to Seek**: Tap left/right to skip ±10 seconds
+*   **Vertical Swipe Navigation**: Swipe up/down between videos (TikTok-style)
+*   **Semi-Transparent Overlays**: Immersive viewing with backdrop blur
+*   **Touch-Optimized**: 48x48px minimum touch targets (Material Design 3)
+*   **Haptic Feedback**: Tactile responses for interactions
+*   **Portrait Mode**: Proper aspect ratio handling for mobile viewing
 
 ### Technical Architecture
 
@@ -211,6 +213,16 @@ PMS has no built-in authentication. For public networks:
 - Configure firewall rules
 
 See [PORTABLE_SETUP.md](PORTABLE_SETUP.md#security-considerations) for details.
+
+## Documentation
+
+- **QUICKSTART.md**: Fast setup guide for portable drives
+- **PORTABLE_SETUP.md**: Comprehensive portability guide
+- **PROFESSIONAL_STREAMING_UI.md**: Research-driven mobile UI design
+- **STABILITY_REPORT.md**: Technical stability improvements
+- **CHANGELOG.md**: Version history
+- **DEPLOYMENT.md**: Production deployment guide
+- **CONTRIBUTING.md**: Contribution guidelines
 
 ## License
 MIT
