@@ -1981,8 +1981,6 @@ func main() {
 			if (currentQueue.length === 0) {
 				listDiv.classList.remove('grid');
 				listDiv.innerHTML = '<div class="empty-state"><i class="empty-state-icon fa-solid fa-folder-open"></i><div><strong>No media found</strong></div><div>Adjust your filters or add media files</div></div>';
-				renderRecommendations();
-				renderRecent();
 				return;
 			}
 			const useGrid = window.innerWidth > 640;
@@ -2012,8 +2010,6 @@ func main() {
 					if (activeEl) {
 						activeEl.scrollIntoView({ block: 'nearest' });
 					}
-					renderRecommendations();
-					renderRecent();
 				}
 
 				function sampleRecommendations(limit) {
@@ -2059,44 +2055,6 @@ func main() {
 					return '<div class="card-thumb"></div>';
 				}
 
-				function renderRecommendations() {
-					if (!currentQueue.length) {
-						recommendList.innerHTML = '<div class="media-sub">No recommendations yet.</div>';
-						return;
-					}
-					const activePath = (currentIndex >= 0 && currentQueue[currentIndex]) ? currentQueue[currentIndex].path : lastPlayedPath;
-					if (!recommendationPaths.length || recommendationAnchorPath !== activePath) {
-						refreshRecommendationsForCurrent();
-					}
-					const map = {};
-					mediaData.forEach(function(m) { map[m.path] = m; });
-					const picks = recommendationPaths.map(function(p) { return map[p]; }).filter(Boolean).slice(0, 8);
-					recommendList.innerHTML = picks.map(function(m) {
-						const kind = m.isJav ? 'JAV' : (m.isArtist ? 'Artist' : 'Episode');
-						return '' +
-							'<button class="recommend-card" data-rec-path="' + esc(m.path) + '">' +
-								cardThumbHtml(m) +
-								'<div class="card-kind">' + esc(kind) + '</div>' +
-								'<div class="recommend-name">' + esc(m.episodeTitle || m.title) + '</div>' +
-								'<div class="recommend-meta">' + esc(m.series || m.category || '-') + '</div>' +
-							'</button>';
-					}).join('');
-					document.querySelectorAll('.recommend-card').forEach(function(el) {
-						el.addEventListener('click', function() {
-							const path = el.getAttribute('data-rec-path');
-							const idx = currentQueue.findIndex(function(m) { return m.path === path; });
-							if (idx >= 0) {
-								selectItemByQueueIndex(idx);
-								return;
-							}
-							const globalIdx = mediaData.findIndex(function(m) { return m.path === path; });
-							if (globalIdx >= 0) {
-								applySelected(mediaData[globalIdx]);
-							}
-						});
-					});
-				}
-
 				function markRecentPlayed(path) {
 					if (!path) return;
 					recentPaths = recentPaths.filter(function(p) { return p !== path; });
@@ -2104,40 +2062,6 @@ func main() {
 					if (recentPaths.length > 18) {
 						recentPaths = recentPaths.slice(0, 18);
 					}
-				}
-
-				function renderRecent() {
-					if (!recentPaths.length) {
-						recentList.innerHTML = '<div class="media-sub">No recent plays yet.</div>';
-						return;
-					}
-					const map = {};
-					mediaData.forEach(function(m) { map[m.path] = m; });
-					const items = recentPaths.map(function(p) { return map[p]; }).filter(Boolean).slice(0, 10);
-					recentList.innerHTML = items.map(function(m) {
-						const kind = m.isJav ? 'JAV' : (m.isArtist ? 'Artist' : 'Episode');
-						return '' +
-							'<button class="recent-card" data-recent-path="' + esc(m.path) + '">' +
-								cardThumbHtml(m) +
-								'<div class="card-kind">' + esc(kind) + '</div>' +
-								'<div class="recent-name">' + esc(m.episodeTitle || m.title) + '</div>' +
-								'<div class="recent-meta">' + esc(m.series || m.category || '-') + '</div>' +
-							'</button>';
-					}).join('');
-					document.querySelectorAll('.recent-card').forEach(function(el) {
-						el.addEventListener('click', function() {
-							const p = el.getAttribute('data-recent-path');
-							const idx = currentQueue.findIndex(function(m) { return m.path === p; });
-							if (idx >= 0) {
-								selectItemByQueueIndex(idx);
-								return;
-							}
-							const globalIdx = mediaData.findIndex(function(m) { return m.path === p; });
-							if (globalIdx >= 0) {
-								applySelected(mediaData[globalIdx]);
-							}
-						});
-					});
 				}
 
 				function syncActiveFromPath(path) {
