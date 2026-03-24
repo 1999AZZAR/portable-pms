@@ -2317,9 +2317,6 @@ func main() {
 				
 				video.addEventListener('touchmove', showControls);
 				
-				let touchStartY = 0;
-				let touchStartX = 0;
-				
 				document.querySelector('.video-frame').addEventListener('touchstart', (e) => {
 					touchStartY = e.touches[0].clientY;
 					touchStartX = e.touches[0].clientX;
