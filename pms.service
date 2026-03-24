@@ -1,0 +1,32 @@
+[Unit]
+Description=Portable Media Streamer
+After=network.target
+
+[Service]
+Type=simple
+User=pms
+Group=pms
+WorkingDirectory=/media/external/pms
+ExecStart=/media/external/pms/bin/pms --path /media/external/media --port 8080 --log-level info
+Restart=on-failure
+RestartSec=10s
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/media/external/media/.metadata
+ReadOnlyPaths=/media/external/media
+
+# Resource limits
+LimitNOFILE=65536
+TasksMax=512
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pms
+
+[Install]
+WantedBy=multi-user.target

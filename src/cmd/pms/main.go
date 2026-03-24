@@ -1,48 +1,82 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
+	"syscall"
+	"time"
 
 	"github.com/1999AZZAR/portable-pms/src/internal/db"
 	"github.com/1999AZZAR/portable-pms/src/internal/scanner"
 	"github.com/1999AZZAR/portable-pms/src/internal/streamer"
 )
 
+var (
+	version = "1.1.0"
+)
+
 func main() {
 	mediaPath := flag.String("path", ".", "Path to media directory")
 	port := flag.Int("port", 8080, "Server port")
+	logLevel := flag.String("log-level", "info", "Log level (debug, info, warn, error)")
 	flag.Parse()
+
+	level := parseLogLevel(*logLevel)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
+	slog.SetDefault(logger)
 
 	absPath, err := filepath.Abs(*mediaPath)
 	if err != nil {
-		log.Fatalf("Invalid path: %v", err)
+		logger.Error("invalid path", "path", *mediaPath, "error", err)
+		os.Exit(1)
 	}
 
-	// 1. Init Database
+	if stat, err := os.Stat(absPath); err != nil || !stat.IsDir() {
+		logger.Error("media path not accessible", "path", absPath, "error", err)
+		os.Exit(1)
+	}
+
 	metaDir := filepath.Join(absPath, ".metadata")
-	os.MkdirAll(metaDir, 0755)
+	if err := os.MkdirAll(metaDir, 0755); err != nil {
+		logger.Error("failed to create metadata directory", "error", err)
+		os.Exit(1)
+	}
+
 	database, err := db.InitDB(filepath.Join(metaDir, "pms.db"))
 	if err != nil {
-		log.Fatalf("DB Init failed: %v", err)
+		logger.Error("database init failed", "error", err)
+		os.Exit(1)
 	}
+	defer database.Close()
 
-	st := streamer.New(absPath)
-	var scanInProgress int32
+	st := streamer.New(absPath, logger)
+	var scanInProgress atomic.Int32
 
-	fmt.Printf("🚀 Starting Portable Media Streamer (Dark Watch UI)\n")
-	fmt.Printf("📂 Media Path: %s\n", absPath)
-	fmt.Printf("🌐 Address: http://localhost:%d\n", *port)
+	logger.Info("starting portable media streamer",
+		"version", version,
+		"media_path", absPath,
+		"port", *port,
+		"log_level", *logLevel)
 
-	// 2. Start Scanner (Async)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Error("scanner goroutine panic", "error", r)
+			}
+		}()
+
 		sentinelPath := filepath.Join(metaDir, "scan_done")
 
 		var totalRows int
@@ -59,34 +93,63 @@ func main() {
 			needScan = true
 		}
 		if staleAbsRows > 0 {
-			fmt.Printf("🧹 Found %d stale absolute-path entries, refreshing index...\n", staleAbsRows)
+			logger.Info("found stale absolute-path entries, refreshing index", "count", staleAbsRows)
 			if _, err := database.Exec("DELETE FROM media WHERE path LIKE '/%'"); err != nil {
-				fmt.Printf("❌ Failed to clean stale entries: %v\n", err)
+				logger.Error("failed to clean stale entries", "error", err)
 			}
 			_ = os.Remove(sentinelPath)
 			needScan = true
 		}
 
 		if needScan {
-			atomic.StoreInt32(&scanInProgress, 1)
-			fmt.Println("🔍 Scanning for media (first run)...")
-			s := scanner.New(absPath, database)
-			if err := s.Start(); err != nil {
-				fmt.Printf("❌ Scan error: %v\n", err)
+			scanInProgress.Store(1)
+			logger.Info("starting media scan")
+			
+			scanCtx, scanCancel := context.WithTimeout(ctx, 30*time.Minute)
+			defer scanCancel()
+			
+			s := scanner.New(absPath, database, logger)
+			if err := s.Start(scanCtx); err != nil {
+				if err == context.Canceled {
+					logger.Info("scan cancelled")
+				} else {
+					logger.Error("scan error", "error", err)
+				}
+			} else {
+				_ = os.WriteFile(sentinelPath, []byte("done"), 0644)
+				logger.Info("scan complete, sentinel created")
 			}
-			// Create sentinel file
-			_ = os.WriteFile(sentinelPath, []byte("done"), 0644)
-			fmt.Println("✅ Scan complete, sentinel created")
-			atomic.StoreInt32(&scanInProgress, 0)
+			scanInProgress.Store(0)
 		} else {
-			atomic.StoreInt32(&scanInProgress, 0)
-			fmt.Println("🔄 Skipping scan – metadata cached")
+			scanInProgress.Store(0)
+			logger.Info("skipping scan, metadata cached")
 		}
 	}()
 
+	mux := http.NewServeMux()
 
-	// 3. API Endpoints
-	http.HandleFunc("/api/media", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
+		health := map[string]interface{}{
+			"status":  "healthy",
+			"version": version,
+		}
+
+		if err := database.PingContext(ctx); err != nil {
+			health["status"] = "degraded"
+			health["database"] = "unhealthy"
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+
+		health["scanning"] = scanInProgress.Load() == 1
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(health)
+	})
+
+	mux.HandleFunc("/api/media", func(w http.ResponseWriter, r *http.Request) {
 		rows, err := database.Query("SELECT id, path, type, category, title, size FROM media ORDER BY category, title, path")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -110,16 +173,15 @@ func main() {
 		json.NewEncoder(w).Encode(list)
 	})
 
-	http.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]bool{
-			"scanning": atomic.LoadInt32(&scanInProgress) == 1,
+			"scanning": scanInProgress.Load() == 1,
 		})
 	})
 
-	// 4. Streaming & Static Endpoints
-	http.HandleFunc("/stream", st.ServeMedia)
-	http.HandleFunc("/hls/", st.ServeHLS)
+	mux.HandleFunc("/stream", st.ServeMedia)
+	mux.HandleFunc("/hls/", st.ServeHLS)
 
 	executable, _ := os.Executable()
 	baseDir := filepath.Dir(executable)
@@ -128,10 +190,9 @@ func main() {
 	}
 
 	staticDir := filepath.Join(baseDir, "web", "static")
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 
-	// 5. Dark watch-style UI
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
@@ -1531,5 +1592,61 @@ func main() {
 		fmt.Fprint(w, html)
 	})
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
+	timeoutHandler := http.TimeoutHandler(mux, 30*time.Second, "Request timeout")
+
+	server := &http.Server{
+		Addr:         fmt.Sprintf(":%d", *port),
+		Handler:      timeoutHandler,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	serverErrors := make(chan error, 1)
+	go func() {
+		logger.Info("http server listening", "address", server.Addr)
+		serverErrors <- server.ListenAndServe()
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case err := <-serverErrors:
+		logger.Error("server error", "error", err)
+		os.Exit(1)
+	case sig := <-sigChan:
+		logger.Info("shutdown signal received", "signal", sig.String())
+
+		cancel()
+
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer shutdownCancel()
+
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			logger.Error("graceful shutdown failed", "error", err)
+			server.Close()
+		}
+
+		if err := st.Shutdown(shutdownCtx); err != nil {
+			logger.Warn("streamer shutdown error", "error", err)
+		}
+
+		logger.Info("shutdown complete")
+	}
+}
+
+func parseLogLevel(level string) slog.Level {
+	switch strings.ToLower(level) {
+	case "debug":
+		return slog.LevelDebug
+	case "info":
+		return slog.LevelInfo
+	case "warn", "warning":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelInfo
+	}
 }

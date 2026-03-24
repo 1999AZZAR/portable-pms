@@ -1,29 +1,46 @@
 package scanner
 
 import (
+	"context"
 	"database/sql"
-	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Scanner struct {
 	RootPath string
 	DB       *sql.DB
-	mu       sync.Mutex // protect DB writes
+	Logger   *slog.Logger
+	mu       sync.Mutex
 }
 
-func New(root string, database *sql.DB) *Scanner {
-	return &Scanner{RootPath: root, DB: database}
+func New(root string, database *sql.DB, logger *slog.Logger) *Scanner {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	return &Scanner{
+		RootPath: root,
+		DB:       database,
+		Logger:   logger,
+	}
 }
 
-func (s *Scanner) Start() error {
-	extensions := map[string]bool{".mp4": true, ".mkv": true, ".avi": true, ".mov": true}
+func (s *Scanner) Start(ctx context.Context) error {
+	defer func() {
+		if r := recover(); r != nil {
+			s.Logger.Error("scanner panic recovered", "error", r, "stack", string(debug.Stack()))
+		}
+	}()
+
+	extensions := map[string]bool{".mp4": true, ".mkv": true, ".avi": true, ".mov": true, ".webm": true}
 
 	fileCh := make(chan fileTask, 512)
 	workerCount := max(2, runtime.NumCPU())
@@ -31,20 +48,40 @@ func (s *Scanner) Start() error {
 
 	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		go func(workerID int) {
+			defer func() {
+				if r := recover(); r != nil {
+					s.Logger.Error("worker panic", "worker_id", workerID, "error", r)
+				}
+				wg.Done()
+			}()
 			for task := range fileCh {
-				s.processFile(task.path, task.info)
+				select {
+				case <-ctx.Done():
+					s.Logger.Info("worker cancelled", "worker_id", workerID)
+					return
+				default:
+					s.processFile(ctx, task.path, task.info)
+				}
 			}
-		}()
+		}(i)
 	}
 
+	scanStarted := time.Now()
+	fileCount := 0
+
 	err := filepath.WalkDir(s.RootPath, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
 		}
 
-		// Skip hidden folders like .metadata
+		if err != nil {
+			s.Logger.Warn("walkdir error", "path", path, "error", err)
+			return nil
+		}
+
 		if d.IsDir() && strings.HasPrefix(d.Name(), ".") {
 			return filepath.SkipDir
 		}
@@ -59,33 +96,47 @@ func (s *Scanner) Start() error {
 
 		info, infoErr := d.Info()
 		if infoErr != nil {
+			s.Logger.Warn("stat error", "path", path, "error", infoErr)
 			return nil
 		}
-		fileCh <- fileTask{path: path, info: info}
+
+		select {
+		case fileCh <- fileTask{path: path, info: info}:
+			fileCount++
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 		return nil
 	})
 
 	close(fileCh)
 	wg.Wait()
+
+	s.Logger.Info("scan completed",
+		"duration", time.Since(scanStarted),
+		"files_found", fileCount,
+		"error", err)
+
 	return err
 }
 
-func (s *Scanner) processFile(path string, info os.FileInfo) {
+func (s *Scanner) processFile(ctx context.Context, path string, info os.FileInfo) {
 	relPath, _ := filepath.Rel(s.RootPath, path)
 	parts := splitPath(relPath)
 
 	mediaType, category, title := classify(parts, info.Name())
 
-	// Serialize DB write to avoid lock contention
 	s.mu.Lock()
-	_, err := s.DB.Exec("INSERT OR REPLACE INTO media (path, type, category, title, size) VALUES (?, ?, ?, ?, ?)",
+	defer s.mu.Unlock()
+
+	_, err := s.DB.ExecContext(ctx,
+		"INSERT OR REPLACE INTO media (path, type, category, title, size) VALUES (?, ?, ?, ?, ?)",
 		relPath, mediaType, category, title, info.Size())
-	s.mu.Unlock()
 
 	if err != nil {
-		fmt.Printf("❌ Error indexing %s: %v\n", path, err)
+		s.Logger.Error("failed to index file", "path", relPath, "error", err)
 	} else {
-		fmt.Printf("✅ Indexed: [%s] %s\n", category, title)
+		s.Logger.Debug("indexed file", "category", category, "title", title, "size", info.Size())
 	}
 }
 

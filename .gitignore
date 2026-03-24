@@ -9,6 +9,10 @@ pms
 *.db-shm
 *.db-wal
 .metadata/
+*.log
+*.swp
+*.swo
+*~
 
 # OS generated files
 .DS_Store
