@@ -418,6 +418,10 @@ func main() {
 					overflow: hidden;
 					border: 1px solid #3a3a42;
 					box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+					position: relative;
+					display: flex;
+					align-items: center;
+					justify-content: center;
 				}
 
 				.video-frame video {
@@ -425,6 +429,185 @@ func main() {
 					height: 100%;
 					display: block;
 					background: #000;
+					object-fit: contain;
+				}
+				
+				.player-overlay {
+					position: absolute;
+					top: 0;
+					left: 0;
+					right: 0;
+					bottom: 0;
+					background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.6) 100%);
+					opacity: 0;
+					transition: opacity 0.3s ease;
+					pointer-events: none;
+					z-index: 1;
+				}
+				
+				.video-frame:hover .player-overlay,
+				.player-overlay:not(.hidden) {
+					opacity: 1;
+				}
+				
+				.player-overlay.hidden {
+					opacity: 0;
+				}
+				
+				.player-top-bar {
+					position: absolute;
+					top: 0;
+					left: 0;
+					right: 0;
+					padding: 16px;
+					display: flex;
+					align-items: center;
+					gap: 12px;
+					z-index: 2;
+					pointer-events: auto;
+				}
+				
+				.player-back-btn {
+					width: 40px;
+					height: 40px;
+					border-radius: 50%;
+					background: rgba(0, 0, 0, 0.5);
+					backdrop-filter: blur(8px);
+					border: none;
+					color: #fff;
+					font-size: 1.25rem;
+					display: none;
+					align-items: center;
+					justify-content: center;
+					cursor: pointer;
+					transition: transform 0.2s ease;
+				}
+				
+				.player-back-btn:active {
+					transform: scale(0.9);
+				}
+				
+				.player-title-wrap {
+					flex: 1;
+					min-width: 0;
+				}
+				
+				.player-title {
+					color: #fff;
+					font-size: 1rem;
+					font-weight: 700;
+					margin: 0;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+					text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+				}
+				
+				.player-subtitle {
+					color: rgba(255, 255, 255, 0.8);
+					font-size: 0.75rem;
+					margin: 2px 0 0;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+					text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+				}
+				
+				.player-bottom-bar {
+					position: absolute;
+					bottom: 0;
+					left: 0;
+					right: 0;
+					padding: 16px;
+					z-index: 2;
+					pointer-events: auto;
+				}
+				
+				.player-controls {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					gap: 32px;
+					margin-bottom: 16px;
+				}
+				
+				.player-control-btn {
+					width: 48px;
+					height: 48px;
+					border-radius: 50%;
+					background: rgba(0, 0, 0, 0.5);
+					backdrop-filter: blur(8px);
+					border: none;
+					color: #fff;
+					font-size: 1.5rem;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					cursor: pointer;
+					transition: all 0.2s ease;
+				}
+				
+				.player-control-btn:hover {
+					background: rgba(0, 0, 0, 0.7);
+					transform: scale(1.05);
+				}
+				
+				.player-control-btn:active {
+					transform: scale(0.95);
+				}
+				
+				.player-control-btn.play {
+					width: 64px;
+					height: 64px;
+					font-size: 2rem;
+					background: var(--accent);
+				}
+				
+				.player-control-btn.play:hover {
+					background: var(--accent-hover);
+				}
+				
+				.seek-indicator {
+					position: absolute;
+					top: 50%;
+					transform: translateY(-50%);
+					width: 120px;
+					height: 120px;
+					border-radius: 50%;
+					background: rgba(0, 0, 0, 0.7);
+					backdrop-filter: blur(8px);
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+					justify-content: center;
+					gap: 8px;
+					opacity: 0;
+					pointer-events: none;
+					transition: opacity 0.2s ease;
+					z-index: 3;
+				}
+				
+				.seek-indicator.left {
+					left: 20%;
+				}
+				
+				.seek-indicator.right {
+					right: 20%;
+				}
+				
+				.seek-indicator.show {
+					opacity: 1;
+				}
+				
+				.seek-indicator i {
+					font-size: 2.5rem;
+					color: #fff;
+				}
+				
+				.seek-indicator span {
+					font-size: 1rem;
+					color: #fff;
+					font-weight: 700;
 				}
 
 				.control-row {
@@ -1235,180 +1418,20 @@ func main() {
 				right: 0;
 				bottom: 0;
 				border-radius: 0;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				margin: 0;
-			}
-			
-			.video-frame video {
-				width: 100%;
-				height: 100%;
-				object-fit: contain;
-			}
-			
-			.player-overlay {
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.6) 100%);
-				opacity: 1;
-				transition: opacity 0.3s ease;
-				pointer-events: none;
-				z-index: 1;
-			}
-			
-			.player-overlay.hidden {
-				opacity: 0;
-			}
-			
-			.player-top-bar {
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				padding: 20px 16px;
-				display: flex;
-				align-items: center;
-				gap: 12px;
-				z-index: 2;
-				pointer-events: auto;
+				border: none;
+				box-shadow: none;
 			}
 			
 			.player-back-btn {
-				width: 40px;
-				height: 40px;
-				border-radius: 50%;
-				background: rgba(0, 0, 0, 0.5);
-				backdrop-filter: blur(8px);
-				border: none;
-				color: #fff;
-				font-size: 1.25rem;
 				display: flex;
-				align-items: center;
-				justify-content: center;
-				cursor: pointer;
-				transition: transform 0.2s ease;
 			}
 			
-			.player-back-btn:active {
-				transform: scale(0.9);
-			}
-			
-			.player-title-wrap {
-				flex: 1;
-				min-width: 0;
-			}
-			
-			.player-title {
-				color: #fff;
-				font-size: 1rem;
-				font-weight: 700;
-				margin: 0;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-			}
-			
-			.player-subtitle {
-				color: rgba(255, 255, 255, 0.8);
-				font-size: 0.75rem;
-				margin: 2px 0 0;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: nowrap;
-				text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-			}
-			
-			.player-bottom-bar {
-				position: absolute;
-				bottom: 0;
-				left: 0;
-				right: 0;
-				padding: 16px;
-				z-index: 2;
-				pointer-events: auto;
-			}
-			
-			.player-controls {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				gap: 32px;
-				margin-bottom: 16px;
-			}
-			
-			.player-control-btn {
-				width: 48px;
-				height: 48px;
-				border-radius: 50%;
-				background: rgba(0, 0, 0, 0.5);
-				backdrop-filter: blur(8px);
-				border: none;
-				color: #fff;
-				font-size: 1.5rem;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				cursor: pointer;
-				transition: all 0.2s ease;
-			}
-			
-			.player-control-btn:active {
-				transform: scale(0.9);
-			}
-			
-			.player-control-btn.play {
-				width: 64px;
-				height: 64px;
-				font-size: 2rem;
-				background: var(--accent);
-			}
-			
-			.seek-indicator {
-				position: absolute;
-				top: 50%;
-				transform: translateY(-50%);
-				width: 120px;
-				height: 120px;
-				border-radius: 50%;
-				background: rgba(0, 0, 0, 0.7);
-				backdrop-filter: blur(8px);
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				justify-content: center;
-				gap: 8px;
-				opacity: 0;
-				pointer-events: none;
-				transition: opacity 0.2s ease;
-				z-index: 3;
-			}
-			
-			.seek-indicator.left {
-				left: 20%;
-			}
-			
-			.seek-indicator.right {
-				right: 20%;
-			}
-			
-			.seek-indicator.show {
+			.player-overlay {
 				opacity: 1;
 			}
 			
-			.seek-indicator i {
-				font-size: 2.5rem;
-				color: #fff;
-			}
-			
-			.seek-indicator span {
-				font-size: 1rem;
-				color: #fff;
-				font-weight: 700;
+			.player-top-bar {
+				padding: 20px 16px;
 			}
 
 			.control-row {
