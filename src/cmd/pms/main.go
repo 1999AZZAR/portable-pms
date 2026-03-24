@@ -2188,7 +2188,10 @@ func main() {
 				
 				playerPlayBtn.addEventListener('click', togglePlayPause);
 				playerBackBtn.addEventListener('click', () => {
-					document.querySelector('.mobile-nav-btn[data-view="playlist"]').click();
+					const playlistBtn = document.getElementById('mobile-nav-playlist');
+					if (playlistBtn) {
+						playlistBtn.click();
+					}
 				});
 				playerPrevBtn.addEventListener('click', () => playPrev());
 				playerNextBtn.addEventListener('click', () => playNext());
