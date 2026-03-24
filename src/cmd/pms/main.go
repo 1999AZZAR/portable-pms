@@ -201,39 +201,86 @@ func main() {
 		<!DOCTYPE html>
 		<html lang="en">
 		<head>
-			<meta charset="UTF-8">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-			<meta name="apple-mobile-web-app-capable" content="yes">
-			<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-			<meta name="theme-color" content="#090909">
-			<title>PMS - Portable Media Streamer</title>
-			<link href="/static/css/bootstrap.min.css" rel="stylesheet">
-			<script src="/static/js/hls.min.js"></script>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<meta name="theme-color" content="#090909">
+		<title>PMS - Portable Media Streamer</title>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+		<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+		<script src="/static/js/hls.min.js"></script>
 			<style>
 				@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap');
 
-			:root {
-				--bg: #090909;
-				--surface: #121214;
-				--surface-soft: #1d1d22;
-				--text: #f5f5f7;
-				--muted: #9ea2aa;
-				--accent: #ff2f2f;
-				--accent-soft: #321616;
-				--border: #2a2b31;
-				--shell-pad: 12px;
-				--playlist-card-min: 220px;
-				--playlist-card-max: 300px;
-				--rail-card-min: 260px;
-				--rail-card-max: 330px;
-				--glow: 0 14px 40px rgba(0, 0, 0, 0.45);
-				--bottom-nav-height: 0px;
-			}
+		:root {
+			--bg: #090909;
+			--surface: #121214;
+			--surface-soft: #1d1d22;
+			--surface-elevated: #1f2024;
+			--text: #f5f5f7;
+			--text-secondary: #b8bbc2;
+			--muted: #9ea2aa;
+			--accent: #ff2f2f;
+			--accent-hover: #ff4545;
+			--accent-soft: #321616;
+			--accent-container: #5b1f1f;
+			--border: #2a2b31;
+			--shell-pad: 12px;
+			--playlist-card-min: 220px;
+			--playlist-card-max: 300px;
+			--rail-card-min: 260px;
+			--rail-card-max: 330px;
+			--elevation-1: 0 2px 4px rgba(0, 0, 0, 0.2);
+			--elevation-2: 0 4px 8px rgba(0, 0, 0, 0.3);
+			--elevation-3: 0 8px 16px rgba(0, 0, 0, 0.4);
+			--elevation-4: 0 16px 32px rgba(0, 0, 0, 0.5);
+			--bottom-nav-height: 0px;
+			--transition-quick: 150ms cubic-bezier(0.2, 0, 0, 1);
+			--transition-standard: 250ms cubic-bezier(0.2, 0, 0, 1);
+			--transition-emphasized: 400ms cubic-bezier(0.2, 0, 0, 1);
+		}
 
-			* {
-				box-sizing: border-box;
-				-webkit-tap-highlight-color: rgba(255, 47, 47, 0.1);
+		* {
+			box-sizing: border-box;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		@keyframes ripple {
+			0% {
+				transform: scale(0);
+				opacity: 0.5;
 			}
+			100% {
+				transform: scale(4);
+				opacity: 0;
+			}
+		}
+
+		@keyframes slideUp {
+			from {
+				transform: translateY(20px);
+				opacity: 0;
+			}
+			to {
+				transform: translateY(0);
+				opacity: 1;
+			}
+		}
+
+		@keyframes skeleton-loading {
+			0% {
+				background-position: -200px 0;
+			}
+			100% {
+				background-position: calc(200px + 100%) 0;
+			}
+		}
+
+		@keyframes float {
+			0%, 100% { transform: translateY(0px); }
+			50% { transform: translateY(-10px); }
+		}
 
 			body {
 				background:
@@ -717,15 +764,19 @@ func main() {
 					--rail-card-max: 390px;
 				}
 
-				.empty-state {
-					margin: 12px;
-					border: 1px dashed #3d3d43;
-					border-radius: 12px;
-					padding: 26px;
-					text-align: center;
-					color: var(--muted);
-					background: #141417;
-				}
+		.empty-state {
+			margin: 12px;
+			border: 1px dashed #3d3d43;
+			border-radius: 12px;
+			padding: 26px;
+			text-align: center;
+			color: var(--muted);
+			background: #141417;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
 
 				.loading-dot {
 					display: inline-block;
@@ -849,59 +900,191 @@ func main() {
 				background: rgba(255, 255, 255, 0.08);
 			}
 
-			.mobile-bottom-nav {
-				position: fixed;
-				bottom: 0;
-				left: 0;
-				right: 0;
-				background: linear-gradient(180deg, rgba(18, 18, 22, 0.98) 0%, rgba(9, 9, 9, 0.98) 100%);
-				border-top: 1px solid var(--border);
-				backdrop-filter: blur(20px);
-				display: none;
-				padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-				z-index: 1000;
-			}
+		.mobile-bottom-nav {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: linear-gradient(180deg, rgba(18, 18, 22, 0.98) 0%, rgba(9, 9, 9, 0.98) 100%);
+			border-top: 1px solid var(--border);
+			backdrop-filter: blur(20px);
+			display: none;
+			padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+			z-index: 1000;
+			box-shadow: var(--elevation-3);
+		}
 
-			.mobile-nav-grid {
-				display: grid;
-				grid-template-columns: repeat(4, 1fr);
-				gap: 8px;
-				max-width: 480px;
-				margin: 0 auto;
-			}
+		.mobile-nav-grid {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 8px;
+			max-width: 480px;
+			margin: 0 auto;
+		}
 
-			.mobile-nav-btn {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				justify-content: center;
-				gap: 4px;
-				padding: 12px 8px;
-				border: none;
-				background: transparent;
-				color: var(--muted);
-				font-size: 0.7rem;
-				font-weight: 600;
-				cursor: pointer;
-				border-radius: 12px;
-				transition: all 0.2s ease;
-				min-height: 64px;
-				touch-action: manipulation;
-			}
+		.mobile-nav-btn {
+			position: relative;
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 4px;
+			padding: 12px 8px;
+			border: none;
+			background: transparent;
+			color: var(--muted);
+			font-size: 0.7rem;
+			font-weight: 600;
+			cursor: pointer;
+			border-radius: 16px;
+			transition: all var(--transition-standard);
+			min-height: 64px;
+			touch-action: manipulation;
+		}
 
-			.mobile-nav-btn.active {
-				background: rgba(255, 47, 47, 0.1);
-				color: var(--accent);
-			}
+		.mobile-nav-btn::before {
+			content: '';
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			width: 0;
+			height: 0;
+			border-radius: 50%;
+			background: rgba(255, 47, 47, 0.2);
+			transform: translate(-50%, -50%);
+			transition: width var(--transition-quick), height var(--transition-quick);
+		}
 
-			.mobile-nav-btn:active {
-				transform: scale(0.92);
-			}
+		.mobile-nav-btn:active::before {
+			width: 100%;
+			height: 100%;
+		}
 
-			.mobile-nav-icon {
-				font-size: 1.5rem;
-				line-height: 1;
-			}
+		.mobile-nav-btn.active {
+			background: rgba(255, 47, 47, 0.12);
+			color: var(--accent);
+		}
+
+		.mobile-nav-btn:active {
+			transform: scale(0.96);
+		}
+
+		.mobile-nav-icon {
+			font-size: 1.4rem;
+			line-height: 1;
+		}
+
+		.fab {
+			position: fixed;
+			bottom: calc(var(--bottom-nav-height) + 16px);
+			right: 16px;
+			width: 56px;
+			height: 56px;
+			border-radius: 16px;
+			background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+			color: white;
+			border: none;
+			box-shadow: var(--elevation-3);
+			display: none;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.5rem;
+			cursor: pointer;
+			z-index: 999;
+			transition: all var(--transition-standard);
+			animation: float 3s ease-in-out infinite;
+		}
+
+		.fab:active {
+			transform: scale(0.92);
+		}
+
+		.skeleton {
+			background: linear-gradient(
+				90deg,
+				var(--surface-soft) 0px,
+				var(--surface-elevated) 40px,
+				var(--surface-soft) 80px
+			);
+			background-size: 200px 100%;
+			animation: skeleton-loading 1.5s infinite;
+			border-radius: 12px;
+		}
+
+		.skeleton-card {
+			height: 200px;
+			margin-bottom: 12px;
+		}
+
+		.ripple {
+			position: absolute;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.3);
+			transform: scale(0);
+			animation: ripple 0.6s ease-out;
+			pointer-events: none;
+		}
+
+		.swipe-feedback {
+			position: absolute;
+			top: 50%;
+			transform: translateY(-50%);
+			font-size: 4rem;
+			color: var(--accent);
+			opacity: 0;
+			transition: opacity var(--transition-quick);
+			pointer-events: none;
+			z-index: 10;
+			text-shadow: 0 4px 12px rgba(255, 47, 47, 0.5);
+		}
+
+		.swipe-feedback.left {
+			left: 20%;
+		}
+
+		.swipe-feedback.right {
+			right: 20%;
+		}
+
+		.swipe-feedback.show {
+			opacity: 1;
+		}
+
+		.pip-button {
+			position: absolute;
+			top: 12px;
+			right: 12px;
+			width: 40px;
+			height: 40px;
+			border-radius: 12px;
+			background: rgba(0, 0, 0, 0.6);
+			backdrop-filter: blur(10px);
+			border: none;
+			color: white;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			opacity: 0;
+			transition: opacity var(--transition-standard);
+			z-index: 10;
+		}
+
+		.video-frame:hover .pip-button {
+			opacity: 1;
+		}
+
+		.empty-state-icon {
+			font-size: 4rem;
+			color: var(--muted);
+			margin-bottom: 16px;
+			opacity: 0.3;
+		}
+
+		.view-transition {
+			animation: slideUp var(--transition-emphasized) ease-out;
+		}
 
 			.mobile-filter-panel {
 				position: fixed;
@@ -999,14 +1182,18 @@ func main() {
 				opacity: 1;
 			}
 
-			@media (max-width: 640px) {
-				:root {
-					--bottom-nav-height: 80px;
-				}
+		@media (max-width: 640px) {
+			:root {
+				--bottom-nav-height: 80px;
+			}
 
-				.mobile-bottom-nav {
-					display: block;
-				}
+			.mobile-bottom-nav {
+				display: block;
+			}
+
+			.fab {
+				display: flex;
+			}
 
 				body {
 					overflow: auto;
@@ -1098,9 +1285,18 @@ func main() {
 				<div class="layout">
 					<main class="panel">
 						<div class="player-wrap">
-							<div class="video-frame">
-								<video id="video-player" controls playsinline preload="metadata"></video>
-							</div>
+					<div class="video-frame">
+						<video id="video-player" controls playsinline preload="metadata"></video>
+						<button class="pip-button" id="pip-button" type="button" title="Picture-in-Picture">
+							<i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+						</button>
+						<div class="swipe-feedback left" id="swipe-left">
+							<i class="fa-solid fa-backward-step"></i>
+						</div>
+						<div class="swipe-feedback right" id="swipe-right">
+							<i class="fa-solid fa-forward-step"></i>
+						</div>
+					</div>
 							<div class="now-playing">
 								<h1 id="now-playing-title">No media selected</h1>
 								<p id="now-playing-meta">Pick an item from the list to start streaming.</p>
@@ -1149,29 +1345,33 @@ func main() {
 							</div>
 						</div>
 					</aside>
-				</div>
 			</div>
+		</div>
 
-			<nav class="mobile-bottom-nav">
-				<div class="mobile-nav-grid">
-					<button class="mobile-nav-btn active" id="mobile-nav-player" type="button">
-						<span class="mobile-nav-icon">▶</span>
-						<span>Player</span>
-					</button>
-					<button class="mobile-nav-btn" id="mobile-nav-playlist" type="button">
-						<span class="mobile-nav-icon">📋</span>
-						<span>Playlist</span>
-					</button>
-					<button class="mobile-nav-btn" id="mobile-nav-filter" type="button">
-						<span class="mobile-nav-icon">🔍</span>
-						<span>Filter</span>
-					</button>
-					<button class="mobile-nav-btn" id="mobile-nav-shuffle" type="button">
-						<span class="mobile-nav-icon">🔀</span>
-						<span>Shuffle</span>
-					</button>
-				</div>
-			</nav>
+		<button class="fab" id="fab-play-random" type="button" title="Play Random">
+			<i class="fa-solid fa-shuffle"></i>
+		</button>
+
+		<nav class="mobile-bottom-nav">
+			<div class="mobile-nav-grid">
+				<button class="mobile-nav-btn active" id="mobile-nav-player" type="button">
+					<i class="mobile-nav-icon fa-solid fa-play"></i>
+					<span>Player</span>
+				</button>
+				<button class="mobile-nav-btn" id="mobile-nav-playlist" type="button">
+					<i class="mobile-nav-icon fa-solid fa-list"></i>
+					<span>Playlist</span>
+				</button>
+				<button class="mobile-nav-btn" id="mobile-nav-filter" type="button">
+					<i class="mobile-nav-icon fa-solid fa-filter"></i>
+					<span>Filter</span>
+				</button>
+				<button class="mobile-nav-btn" id="mobile-nav-more" type="button">
+					<i class="mobile-nav-icon fa-solid fa-ellipsis-vertical"></i>
+					<span>More</span>
+				</button>
+			</div>
+		</nav>
 
 			<div class="mobile-filter-panel" id="mobile-filter-panel">
 				<div class="mobile-filter-header">
@@ -1486,16 +1686,16 @@ func main() {
 					mediaCount.textContent = queue.length + ' / ' + mediaData.length;
 				}
 
-				function renderQueue() {
-					if (currentQueue.length === 0) {
-						listDiv.classList.remove('grid');
-						listDiv.innerHTML = '<div class="empty-state">No match for current filters.</div>';
-						renderRecommendations();
-						renderRecent();
-						return;
-					}
-					const useGrid = window.innerWidth > 640;
-					listDiv.classList.toggle('grid', useGrid);
+		function renderQueue() {
+			if (currentQueue.length === 0) {
+				listDiv.classList.remove('grid');
+				listDiv.innerHTML = '<div class="empty-state"><i class="empty-state-icon fa-solid fa-folder-open"></i><div><strong>No media found</strong></div><div>Adjust your filters or add media files</div></div>';
+				renderRecommendations();
+				renderRecent();
+				return;
+			}
+			const useGrid = window.innerWidth > 640;
+			listDiv.classList.toggle('grid', useGrid);
 
 					listDiv.innerHTML = currentQueue.map(function(m, i) {
 						const ep = m.episodeNo !== null ? ('EP ' + m.episodeNo) : 'EP -';
@@ -1723,30 +1923,32 @@ func main() {
 					selectItemByQueueIndex(currentIndex);
 				}
 
-				async function fetchMedia() {
-					try {
-						const mediaRes = await fetch('/api/media');
-						const data = await mediaRes.json();
-						let scanning = false;
-						try {
-							const statusRes = await fetch('/api/status');
-							if (statusRes.ok) {
-								const status = await statusRes.json();
-								scanning = !!(status && status.scanning);
-							}
-						} catch (_) {
-							// Status endpoint is optional for backward compatibility.
-						}
-						if(!Array.isArray(data) || data.length === 0) {
-							mediaData = [];
-							currentQueue = [];
-							currentIndex = -1;
-							mediaCount.textContent = '0 items';
-							listDiv.innerHTML = scanning
-								? '<div class="empty-state"><div class="loading-dot"></div><div>Scanning media library...</div></div>'
-								: '<div class="empty-state">No media found.</div>';
-							return;
-						}
+		async function fetchMedia() {
+			try {
+				const mediaRes = await fetch('/api/media');
+				const data = await mediaRes.json();
+				let scanning = false;
+				try {
+					const statusRes = await fetch('/api/status');
+					if (statusRes.ok) {
+						const status = await statusRes.json();
+						scanning = !!(status && status.scanning);
+					}
+				} catch (_) {}
+				
+				if(!Array.isArray(data) || data.length === 0) {
+					mediaData = [];
+					currentQueue = [];
+					currentIndex = -1;
+					mediaCount.textContent = '0 items';
+					
+					if (scanning) {
+						listDiv.innerHTML = '<div class="empty-state"><div class="skeleton skeleton-card"></div><div class="skeleton skeleton-card"></div><div><i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: var(--accent); margin-top: 12px;"></i></div><div style="margin-top: 12px;">Scanning media library...</div></div>';
+					} else {
+						listDiv.innerHTML = '<div class="empty-state"><i class="empty-state-icon fa-solid fa-compact-disc"></i><div><strong>No media found</strong></div><div>Add video files to get started</div></div>';
+					}
+					return;
+				}
 
 						const previousPath = lastPlayedPath || (video.src ? decodeURIComponent((video.src.split('path=')[1] || '').split('&')[0] || '') : '');
 
@@ -1838,87 +2040,178 @@ func main() {
 			fetchMedia();
 			setInterval(fetchMedia, 5000);
 
-			// Mobile swipe gestures
-			const playerWrap = document.querySelector('.player-wrap');
-			const videoFrame = document.querySelector('.video-frame');
+		// Mobile swipe gestures
+		const playerWrap = document.querySelector('.player-wrap');
+		const videoFrame = document.querySelector('.video-frame');
+		const swipeLeft = document.getElementById('swipe-left');
+		const swipeRight = document.getElementById('swipe-right');
 
-			function handleTouchStart(e) {
-				touchStartX = e.changedTouches[0].screenX;
-				touchStartY = e.changedTouches[0].screenY;
-			}
-
-			function handleTouchMove(e) {
-				touchEndX = e.changedTouches[0].screenX;
-				touchEndY = e.changedTouches[0].screenY;
-			}
-
-			function handleTouchEnd() {
-				const deltaX = touchEndX - touchStartX;
-				const deltaY = touchEndY - touchStartY;
-				
-				if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
-					if (deltaX > 0) {
-						playPrev();
-					} else {
-						playNext();
-					}
+		function triggerHaptic(style) {
+			if ('vibrate' in navigator) {
+				switch(style) {
+					case 'light':
+						navigator.vibrate(10);
+						break;
+					case 'medium':
+						navigator.vibrate(20);
+						break;
+					case 'heavy':
+						navigator.vibrate([30, 10, 30]);
+						break;
 				}
 			}
+		}
 
-			if (videoFrame) {
-				videoFrame.addEventListener('touchstart', handleTouchStart, { passive: true });
-				videoFrame.addEventListener('touchmove', handleTouchMove, { passive: true });
-				videoFrame.addEventListener('touchend', handleTouchEnd, { passive: true });
+		function createRipple(event) {
+			const button = event.currentTarget;
+			const ripple = document.createElement('span');
+			const rect = button.getBoundingClientRect();
+			const size = Math.max(rect.width, rect.height);
+			const x = event.clientX - rect.left - size / 2;
+			const y = event.clientY - rect.top - size / 2;
+
+			ripple.className = 'ripple';
+			ripple.style.width = ripple.style.height = size + 'px';
+			ripple.style.left = x + 'px';
+			ripple.style.top = y + 'px';
+
+			button.appendChild(ripple);
+			setTimeout(() => ripple.remove(), 600);
+		}
+
+		document.querySelectorAll('.btn-control, .mobile-nav-btn, .media-item').forEach(btn => {
+			btn.addEventListener('click', createRipple);
+		});
+
+		function handleTouchStart(e) {
+			touchStartX = e.changedTouches[0].screenX;
+			touchStartY = e.changedTouches[0].screenY;
+		}
+
+		function handleTouchMove(e) {
+			touchEndX = e.changedTouches[0].screenX;
+			touchEndY = e.changedTouches[0].screenY;
+			
+			const deltaX = touchEndX - touchStartX;
+			const deltaY = touchEndY - touchStartY;
+			
+			if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+				if (deltaX > 0 && swipeLeft) {
+					swipeLeft.classList.add('show');
+					swipeRight.classList.remove('show');
+				} else if (deltaX < 0 && swipeRight) {
+					swipeRight.classList.add('show');
+					swipeLeft.classList.remove('show');
+				}
 			}
+		}
 
-			// Mobile bottom navigation
-			const mobileNavPlayer = document.getElementById('mobile-nav-player');
-			const mobileNavPlaylist = document.getElementById('mobile-nav-playlist');
-			const mobileNavFilter = document.getElementById('mobile-nav-filter');
-			const mobileNavShuffle = document.getElementById('mobile-nav-shuffle');
-			const mobileFilterPanel = document.getElementById('mobile-filter-panel');
-			const mobileFilterClose = document.getElementById('mobile-filter-close');
-			const mainPanel = document.querySelector('main.panel');
-			const asidePanel = document.querySelector('aside.panel');
-
-			function setActiveNav(activeBtn) {
-				document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
-				activeBtn.classList.add('active');
+		function handleTouchEnd() {
+			if (swipeLeft) swipeLeft.classList.remove('show');
+			if (swipeRight) swipeRight.classList.remove('show');
+			
+			const deltaX = touchEndX - touchStartX;
+			const deltaY = touchEndY - touchStartY;
+			
+			if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
+				triggerHaptic('medium');
+				if (deltaX > 0) {
+					playPrev();
+				} else {
+					playNext();
+				}
 			}
+		}
 
-			if (mobileNavPlayer) {
-				mobileNavPlayer.addEventListener('click', function() {
-					setActiveNav(mobileNavPlayer);
-					if (mainPanel) mainPanel.style.display = 'block';
-					if (asidePanel) asidePanel.style.display = 'none';
-					mobileFilterPanel.classList.remove('show');
-				});
-			}
+		if (videoFrame) {
+			videoFrame.addEventListener('touchstart', handleTouchStart, { passive: true });
+			videoFrame.addEventListener('touchmove', handleTouchMove, { passive: true });
+			videoFrame.addEventListener('touchend', handleTouchEnd, { passive: true });
+		}
 
-			if (mobileNavPlaylist) {
-				mobileNavPlaylist.addEventListener('click', function() {
-					setActiveNav(mobileNavPlaylist);
-					if (mainPanel) mainPanel.style.display = 'none';
-					if (asidePanel) asidePanel.style.display = 'flex';
-					mobileFilterPanel.classList.remove('show');
-				});
-			}
+		// Mobile bottom navigation
+		const mobileNavPlayer = document.getElementById('mobile-nav-player');
+		const mobileNavPlaylist = document.getElementById('mobile-nav-playlist');
+		const mobileNavFilter = document.getElementById('mobile-nav-filter');
+		const mobileNavMore = document.getElementById('mobile-nav-more');
+		const mobileFilterPanel = document.getElementById('mobile-filter-panel');
+		const mobileFilterClose = document.getElementById('mobile-filter-close');
+		const mainPanel = document.querySelector('main.panel');
+		const asidePanel = document.querySelector('aside.panel');
+		const fabPlayRandom = document.getElementById('fab-play-random');
+		const pipButton = document.getElementById('pip-button');
 
-			if (mobileNavFilter) {
-				mobileNavFilter.addEventListener('click', function() {
-					setActiveNav(mobileNavFilter);
-					mobileFilterPanel.classList.toggle('show');
-				});
-			}
+		// Picture-in-Picture
+		if (pipButton && video && document.pictureInPictureEnabled) {
+			pipButton.addEventListener('click', async function() {
+				try {
+					if (document.pictureInPictureElement) {
+						await document.exitPictureInPicture();
+					} else {
+						await video.requestPictureInPicture();
+						triggerHaptic('light');
+					}
+				} catch (err) {
+					console.error('PiP error:', err);
+				}
+			});
+		} else if (pipButton) {
+			pipButton.style.display = 'none';
+		}
 
-			if (mobileNavShuffle) {
-				mobileNavShuffle.addEventListener('click', function() {
-					shuffleQueue();
-					setActiveNav(mobileNavPlayer);
-					if (mainPanel) mainPanel.style.display = 'block';
-					if (asidePanel) asidePanel.style.display = 'none';
-				});
-			}
+		// FAB
+		if (fabPlayRandom) {
+			fabPlayRandom.addEventListener('click', function() {
+				triggerHaptic('medium');
+				playRandom();
+			});
+		}
+
+		function setActiveNav(activeBtn) {
+			document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
+			activeBtn.classList.add('active');
+			triggerHaptic('light');
+		}
+
+		if (mobileNavPlayer) {
+			mobileNavPlayer.addEventListener('click', function() {
+				setActiveNav(mobileNavPlayer);
+				if (mainPanel) {
+					mainPanel.style.display = 'block';
+					mainPanel.classList.add('view-transition');
+				}
+				if (asidePanel) asidePanel.style.display = 'none';
+				mobileFilterPanel.classList.remove('show');
+			});
+		}
+
+		if (mobileNavPlaylist) {
+			mobileNavPlaylist.addEventListener('click', function() {
+				setActiveNav(mobileNavPlaylist);
+				if (mainPanel) mainPanel.style.display = 'none';
+				if (asidePanel) {
+					asidePanel.style.display = 'flex';
+					asidePanel.classList.add('view-transition');
+				}
+				mobileFilterPanel.classList.remove('show');
+			});
+		}
+
+		if (mobileNavFilter) {
+			mobileNavFilter.addEventListener('click', function() {
+				setActiveNav(mobileNavFilter);
+				mobileFilterPanel.classList.toggle('show');
+			});
+		}
+
+		if (mobileNavMore) {
+			mobileNavMore.addEventListener('click', function() {
+				setActiveNav(mobileNavMore);
+				// Could open a settings panel in future
+				shuffleQueue();
+				setTimeout(() => setActiveNav(mobileNavPlayer), 1000);
+			});
+		}
 
 			if (mobileFilterClose) {
 				mobileFilterClose.addEventListener('click', function() {
