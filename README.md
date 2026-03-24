@@ -11,6 +11,14 @@ A zero-dependency media streaming service designed for **true portability**. PMS
 *   **No Installation**: Plug in, run, unplug - no trace left on host
 *   **Drive-Safe**: Graceful shutdown with WAL-mode SQLite for data integrity
 
+### Mobile-First Design (v1.2.0)
+*   **Bottom Navigation**: Native app-like navigation bar for one-handed use
+*   **Swipe Gestures**: Swipe left/right on video for prev/next track
+*   **Touch-Optimized**: 48x48px minimum touch targets (WCAG AAA)
+*   **Pull-to-Refresh**: Pull down playlist to refresh library
+*   **Filter Panel**: Slide-up mobile filter modal with large touch targets
+*   **PWA-Ready**: Install as progressive web app on mobile devices
+
 ### Technical Architecture
 
 PMS implements a decentralized media serving model, where the logic and metadata reside on the same drive as the source media.

@@ -202,56 +202,62 @@ func main() {
 		<html lang="en">
 		<head>
 			<meta charset="UTF-8">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+			<meta name="apple-mobile-web-app-capable" content="yes">
+			<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+			<meta name="theme-color" content="#090909">
 			<title>PMS - Portable Media Streamer</title>
 			<link href="/static/css/bootstrap.min.css" rel="stylesheet">
 			<script src="/static/js/hls.min.js"></script>
 			<style>
 				@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap');
 
-				:root {
-					--bg: #090909;
-					--surface: #121214;
-					--surface-soft: #1d1d22;
-					--text: #f5f5f7;
-					--muted: #9ea2aa;
-					--accent: #ff2f2f;
-					--accent-soft: #321616;
-					--border: #2a2b31;
-					--shell-pad: 12px;
-					--playlist-card-min: 220px;
-					--playlist-card-max: 300px;
-					--rail-card-min: 260px;
-					--rail-card-max: 330px;
-					--glow: 0 14px 40px rgba(0, 0, 0, 0.45);
-				}
+			:root {
+				--bg: #090909;
+				--surface: #121214;
+				--surface-soft: #1d1d22;
+				--text: #f5f5f7;
+				--muted: #9ea2aa;
+				--accent: #ff2f2f;
+				--accent-soft: #321616;
+				--border: #2a2b31;
+				--shell-pad: 12px;
+				--playlist-card-min: 220px;
+				--playlist-card-max: 300px;
+				--rail-card-min: 260px;
+				--rail-card-max: 330px;
+				--glow: 0 14px 40px rgba(0, 0, 0, 0.45);
+				--bottom-nav-height: 0px;
+			}
 
-				* {
-					box-sizing: border-box;
-				}
+			* {
+				box-sizing: border-box;
+				-webkit-tap-highlight-color: rgba(255, 47, 47, 0.1);
+			}
 
-				body {
-					background:
-						radial-gradient(900px 560px at 90% -18%, rgba(255, 47, 47, 0.18) 0%, transparent 55%),
-						radial-gradient(700px 520px at -5% 120%, rgba(255, 140, 0, 0.08) 0%, transparent 62%),
-						linear-gradient(180deg, #111115 0%, var(--bg) 40%);
-					color: var(--text);
-					font-family: 'Manrope', sans-serif;
-					margin: 0;
-					min-height: 100vh;
-					height: 100vh;
-					overflow: hidden;
-				}
+			body {
+				background:
+					radial-gradient(900px 560px at 90% -18%, rgba(255, 47, 47, 0.18) 0%, transparent 55%),
+					radial-gradient(700px 520px at -5% 120%, rgba(255, 140, 0, 0.08) 0%, transparent 62%),
+					linear-gradient(180deg, #111115 0%, var(--bg) 40%);
+				color: var(--text);
+				font-family: 'Manrope', sans-serif;
+				margin: 0;
+				min-height: 100vh;
+				height: 100vh;
+				overflow: hidden;
+				padding-bottom: var(--bottom-nav-height);
+			}
 
-				.app-shell {
-					width: 100%;
-					max-width: 100vw;
-					margin: 0 auto;
-					padding: var(--shell-pad);
-					height: 100vh;
-					display: flex;
-					flex-direction: column;
-				}
+			.app-shell {
+				width: 100%;
+				max-width: 100vw;
+				margin: 0 auto;
+				padding: var(--shell-pad);
+				height: calc(100vh - var(--bottom-nav-height));
+				display: flex;
+				flex-direction: column;
+			}
 
 				.topbar {
 					position: sticky;
@@ -404,18 +410,29 @@ func main() {
 					margin-top: 12px;
 				}
 
-				.btn-control {
-					border: 1px solid #3d3f46;
-					background: linear-gradient(180deg, #262931 0%, #1e2027 100%);
-					color: #efeff2;
-					padding: 7px 12px;
-					border-radius: 10px;
-					font-size: clamp(0.75rem, 0.95vw, 0.82rem);
-					font-weight: 700;
-					cursor: pointer;
-					transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
-					white-space: nowrap;
-				}
+			.btn-control {
+				border: 1px solid #3d3f46;
+				background: linear-gradient(180deg, #262931 0%, #1e2027 100%);
+				color: #efeff2;
+				padding: 12px 16px;
+				border-radius: 12px;
+				font-size: clamp(0.8rem, 1vw, 0.88rem);
+				font-weight: 700;
+				cursor: pointer;
+				transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+				white-space: nowrap;
+				min-height: 48px;
+				min-width: 48px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				touch-action: manipulation;
+				user-select: none;
+			}
+
+			.btn-control:active {
+				transform: scale(0.96);
+			}
 
 				.btn-control:hover {
 					background: linear-gradient(180deg, #2d313c 0%, #252933 100%);
@@ -782,52 +799,7 @@ func main() {
 					}
 				}
 
-				@media (max-width: 640px) {
-					body {
-						overflow: auto;
-					}
-
-					.app-shell {
-						padding: 10px;
-						height: auto;
-					}
-
-					.topbar {
-						padding: 10px;
-						border-radius: 12px;
-					}
-
-					.search-wrap {
-						max-width: none;
-						min-width: 0;
-					}
-
-					.player-wrap {
-						padding: 10px;
-					}
-
-					.video-frame {
-						border-radius: 10px;
-					}
-
-					.playlist-tools {
-						grid-template-columns: 1fr;
-					}
-
-					.playlist-tools > :last-child {
-						grid-column: auto;
-					}
-
-					.recommend-card,
-					.recent-card {
-						min-width: 180px;
-						max-width: 220px;
-					}
-
-					.card-thumb {
-						border-radius: 8px;
-					}
-				}
+			@media (max-width: 640px) {
 
 				#media-list,
 				.player-wrap,
@@ -870,12 +842,241 @@ func main() {
 					border-radius: 999px;
 					border: 2px solid transparent;
 				}
-				#media-list:hover::-webkit-scrollbar-thumb,
-				.player-wrap:hover::-webkit-scrollbar-thumb,
-				.recommend-list:hover::-webkit-scrollbar-thumb,
-				.recent-list:hover::-webkit-scrollbar-thumb {
-					background: rgba(255, 255, 255, 0.08);
+			#media-list:hover::-webkit-scrollbar-thumb,
+			.player-wrap:hover::-webkit-scrollbar-thumb,
+			.recommend-list:hover::-webkit-scrollbar-thumb,
+			.recent-list:hover::-webkit-scrollbar-thumb {
+				background: rgba(255, 255, 255, 0.08);
+			}
+
+			.mobile-bottom-nav {
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				background: linear-gradient(180deg, rgba(18, 18, 22, 0.98) 0%, rgba(9, 9, 9, 0.98) 100%);
+				border-top: 1px solid var(--border);
+				backdrop-filter: blur(20px);
+				display: none;
+				padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+				z-index: 1000;
+			}
+
+			.mobile-nav-grid {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 8px;
+				max-width: 480px;
+				margin: 0 auto;
+			}
+
+			.mobile-nav-btn {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 4px;
+				padding: 12px 8px;
+				border: none;
+				background: transparent;
+				color: var(--muted);
+				font-size: 0.7rem;
+				font-weight: 600;
+				cursor: pointer;
+				border-radius: 12px;
+				transition: all 0.2s ease;
+				min-height: 64px;
+				touch-action: manipulation;
+			}
+
+			.mobile-nav-btn.active {
+				background: rgba(255, 47, 47, 0.1);
+				color: var(--accent);
+			}
+
+			.mobile-nav-btn:active {
+				transform: scale(0.92);
+			}
+
+			.mobile-nav-icon {
+				font-size: 1.5rem;
+				line-height: 1;
+			}
+
+			.mobile-filter-panel {
+				position: fixed;
+				bottom: 0;
+				left: 0;
+				right: 0;
+				background: linear-gradient(180deg, rgba(18, 18, 22, 0.98) 0%, rgba(9, 9, 9, 0.98) 100%);
+				border-top: 1px solid var(--border);
+				backdrop-filter: blur(20px);
+				transform: translateY(100%);
+				transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+				z-index: 999;
+				max-height: 70vh;
+				overflow-y: auto;
+				padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+			}
+
+			.mobile-filter-panel.show {
+				transform: translateY(0);
+			}
+
+			.mobile-filter-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 16px;
+			}
+
+			.mobile-filter-header h3 {
+				margin: 0;
+				font-size: 1.1rem;
+				font-weight: 800;
+			}
+
+			.mobile-filter-close {
+				width: 40px;
+				height: 40px;
+				border-radius: 999px;
+				border: none;
+				background: rgba(255, 255, 255, 0.05);
+				color: var(--text);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 1.5rem;
+				cursor: pointer;
+			}
+
+			.mobile-filter-group {
+				margin-bottom: 16px;
+			}
+
+			.mobile-filter-label {
+				display: block;
+				font-size: 0.85rem;
+				font-weight: 700;
+				color: var(--muted);
+				margin-bottom: 8px;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
+
+			.mobile-filter-select {
+				width: 100%;
+				padding: 14px 16px;
+				border: 1px solid #3e414a;
+				background: #111218;
+				color: #e6e6eb;
+				border-radius: 12px;
+				font-size: 1rem;
+				font-weight: 600;
+				min-height: 52px;
+			}
+
+			.swipe-indicator {
+				position: absolute;
+				top: 50%;
+				transform: translateY(-50%);
+				font-size: 3rem;
+				color: rgba(255, 47, 47, 0.3);
+				pointer-events: none;
+				opacity: 0;
+				transition: opacity 0.2s ease;
+			}
+
+			.swipe-indicator.left {
+				left: 20px;
+			}
+
+			.swipe-indicator.right {
+				right: 20px;
+			}
+
+			.swipe-indicator.show {
+				opacity: 1;
+			}
+
+			@media (max-width: 640px) {
+				:root {
+					--bottom-nav-height: 80px;
 				}
+
+				.mobile-bottom-nav {
+					display: block;
+				}
+
+				body {
+					overflow: auto;
+				}
+
+				.app-shell {
+					padding: 8px;
+					height: auto;
+					min-height: calc(100vh - var(--bottom-nav-height));
+				}
+
+				.topbar {
+					padding: 10px;
+					border-radius: 12px;
+				}
+
+				.search-wrap {
+					max-width: none;
+					min-width: 0;
+				}
+
+				.player-wrap {
+					padding: 10px;
+					position: relative;
+					touch-action: pan-y pinch-zoom;
+				}
+
+				.video-frame {
+					border-radius: 10px;
+					position: relative;
+				}
+
+				.playlist-tools {
+					grid-template-columns: 1fr;
+					display: none;
+				}
+
+				.sidebar-head {
+					padding-bottom: 0;
+				}
+
+				.recommend-card,
+				.recent-card {
+					min-width: 180px;
+					max-width: 220px;
+				}
+
+				.card-thumb {
+					border-radius: 8px;
+				}
+
+				.control-row {
+					display: grid;
+					grid-template-columns: repeat(2, 1fr);
+					gap: 12px;
+				}
+
+				.control-row .btn-control {
+					width: 100%;
+				}
+
+				aside.panel {
+					order: -1;
+					margin-bottom: 16px;
+				}
+
+				#media-list {
+					max-height: 50vh;
+				}
+			}
 			</style>
 		</head>
 		<body>
@@ -951,6 +1152,52 @@ func main() {
 				</div>
 			</div>
 
+			<nav class="mobile-bottom-nav">
+				<div class="mobile-nav-grid">
+					<button class="mobile-nav-btn active" id="mobile-nav-player" type="button">
+						<span class="mobile-nav-icon">▶</span>
+						<span>Player</span>
+					</button>
+					<button class="mobile-nav-btn" id="mobile-nav-playlist" type="button">
+						<span class="mobile-nav-icon">📋</span>
+						<span>Playlist</span>
+					</button>
+					<button class="mobile-nav-btn" id="mobile-nav-filter" type="button">
+						<span class="mobile-nav-icon">🔍</span>
+						<span>Filter</span>
+					</button>
+					<button class="mobile-nav-btn" id="mobile-nav-shuffle" type="button">
+						<span class="mobile-nav-icon">🔀</span>
+						<span>Shuffle</span>
+					</button>
+				</div>
+			</nav>
+
+			<div class="mobile-filter-panel" id="mobile-filter-panel">
+				<div class="mobile-filter-header">
+					<h3>Filters</h3>
+					<button class="mobile-filter-close" id="mobile-filter-close" type="button">×</button>
+				</div>
+				<div class="mobile-filter-group">
+					<label class="mobile-filter-label">Root</label>
+					<select id="root-select-mobile" class="mobile-filter-select">
+						<option value="">All roots</option>
+					</select>
+				</div>
+				<div class="mobile-filter-group">
+					<label class="mobile-filter-label">Playlist</label>
+					<select id="series-select-mobile" class="mobile-filter-select">
+						<option value="">All playlists</option>
+					</select>
+				</div>
+				<div class="mobile-filter-group">
+					<label class="mobile-filter-label">Type</label>
+					<select id="type-select-mobile" class="mobile-filter-select">
+						<option value="">All types</option>
+					</select>
+				</div>
+			</div>
+
 			<script>
 				const video = document.getElementById('video-player');
 				const listDiv = document.getElementById('media-list');
@@ -972,17 +1219,23 @@ func main() {
 				const btnShuffle = document.getElementById('btn-shuffle');
 				const recommendList = document.getElementById('recommend-list');
 				const recentList = document.getElementById('recent-list');
-				let mediaData = [];
-				let currentQueue = [];
-				let currentIndex = -1;
-				let autoplayNext = true;
-				let lastPlayedPath = '';
-				let hlsInstance = null;
-				let recentPaths = [];
-				let recommendationAnchorPath = '';
-				let recommendationPaths = [];
+			let mediaData = [];
+			let currentQueue = [];
+			let currentIndex = -1;
+			let autoplayNext = true;
+			let lastPlayedPath = '';
+			let hlsInstance = null;
+			let recentPaths = [];
+			let recommendationAnchorPath = '';
+			let recommendationPaths = [];
 
-				function esc(input) {
+			let touchStartX = 0;
+			let touchStartY = 0;
+			let touchEndX = 0;
+			let touchEndY = 0;
+			const swipeThreshold = 80;
+
+			function esc(input) {
 					return String(input || '')
 						.replace(/&/g, '&amp;')
 						.replace(/</g, '&lt;')
@@ -1577,15 +1830,183 @@ func main() {
 					}
 				});
 
+			applyAutoSizeMode();
+			window.addEventListener('resize', function() {
 				applyAutoSizeMode();
-				window.addEventListener('resize', function() {
-					applyAutoSizeMode();
-					renderQueue();
+				renderQueue();
+			});
+			fetchMedia();
+			setInterval(fetchMedia, 5000);
+
+			// Mobile swipe gestures
+			const playerWrap = document.querySelector('.player-wrap');
+			const videoFrame = document.querySelector('.video-frame');
+
+			function handleTouchStart(e) {
+				touchStartX = e.changedTouches[0].screenX;
+				touchStartY = e.changedTouches[0].screenY;
+			}
+
+			function handleTouchMove(e) {
+				touchEndX = e.changedTouches[0].screenX;
+				touchEndY = e.changedTouches[0].screenY;
+			}
+
+			function handleTouchEnd() {
+				const deltaX = touchEndX - touchStartX;
+				const deltaY = touchEndY - touchStartY;
+				
+				if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
+					if (deltaX > 0) {
+						playPrev();
+					} else {
+						playNext();
+					}
+				}
+			}
+
+			if (videoFrame) {
+				videoFrame.addEventListener('touchstart', handleTouchStart, { passive: true });
+				videoFrame.addEventListener('touchmove', handleTouchMove, { passive: true });
+				videoFrame.addEventListener('touchend', handleTouchEnd, { passive: true });
+			}
+
+			// Mobile bottom navigation
+			const mobileNavPlayer = document.getElementById('mobile-nav-player');
+			const mobileNavPlaylist = document.getElementById('mobile-nav-playlist');
+			const mobileNavFilter = document.getElementById('mobile-nav-filter');
+			const mobileNavShuffle = document.getElementById('mobile-nav-shuffle');
+			const mobileFilterPanel = document.getElementById('mobile-filter-panel');
+			const mobileFilterClose = document.getElementById('mobile-filter-close');
+			const mainPanel = document.querySelector('main.panel');
+			const asidePanel = document.querySelector('aside.panel');
+
+			function setActiveNav(activeBtn) {
+				document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
+				activeBtn.classList.add('active');
+			}
+
+			if (mobileNavPlayer) {
+				mobileNavPlayer.addEventListener('click', function() {
+					setActiveNav(mobileNavPlayer);
+					if (mainPanel) mainPanel.style.display = 'block';
+					if (asidePanel) asidePanel.style.display = 'none';
+					mobileFilterPanel.classList.remove('show');
 				});
-				fetchMedia();
-				// Refresh list periodically (faster while scanning)
-				setInterval(fetchMedia, 5000);
-			</script>
+			}
+
+			if (mobileNavPlaylist) {
+				mobileNavPlaylist.addEventListener('click', function() {
+					setActiveNav(mobileNavPlaylist);
+					if (mainPanel) mainPanel.style.display = 'none';
+					if (asidePanel) asidePanel.style.display = 'flex';
+					mobileFilterPanel.classList.remove('show');
+				});
+			}
+
+			if (mobileNavFilter) {
+				mobileNavFilter.addEventListener('click', function() {
+					setActiveNav(mobileNavFilter);
+					mobileFilterPanel.classList.toggle('show');
+				});
+			}
+
+			if (mobileNavShuffle) {
+				mobileNavShuffle.addEventListener('click', function() {
+					shuffleQueue();
+					setActiveNav(mobileNavPlayer);
+					if (mainPanel) mainPanel.style.display = 'block';
+					if (asidePanel) asidePanel.style.display = 'none';
+				});
+			}
+
+			if (mobileFilterClose) {
+				mobileFilterClose.addEventListener('click', function() {
+					mobileFilterPanel.classList.remove('show');
+				});
+			}
+
+			// Sync mobile filters with desktop
+			const rootSelectMobile = document.getElementById('root-select-mobile');
+			const seriesSelectMobile = document.getElementById('series-select-mobile');
+			const typeSelectMobile = document.getElementById('type-select-mobile');
+
+			if (rootSelectMobile) {
+				rootSelectMobile.addEventListener('change', function() {
+					rootSelect.value = rootSelectMobile.value;
+					rootSelect.dispatchEvent(new Event('change'));
+					mobileFilterPanel.classList.remove('show');
+				});
+			}
+
+			if (seriesSelectMobile) {
+				seriesSelectMobile.addEventListener('change', function() {
+					seriesSelect.value = seriesSelectMobile.value;
+					seriesSelect.dispatchEvent(new Event('change'));
+					mobileFilterPanel.classList.remove('show');
+				});
+			}
+
+			if (typeSelectMobile) {
+				typeSelectMobile.addEventListener('change', function() {
+					typeSelect.value = typeSelectMobile.value;
+					typeSelect.dispatchEvent(new Event('change'));
+					mobileFilterPanel.classList.remove('show');
+				});
+			}
+
+			// Update mobile selects when desktop selects change
+			const originalRebuildRoot = rebuildRootOptions;
+			rebuildRootOptions = function() {
+				originalRebuildRoot();
+				if (rootSelectMobile) {
+					rootSelectMobile.innerHTML = rootSelect.innerHTML;
+					rootSelectMobile.value = rootSelect.value;
+				}
+			};
+
+			const originalRebuildSeries = rebuildSeriesOptions;
+			rebuildSeriesOptions = function() {
+				originalRebuildSeries();
+				if (seriesSelectMobile) {
+					seriesSelectMobile.innerHTML = seriesSelect.innerHTML;
+					seriesSelectMobile.value = seriesSelect.value;
+				}
+			};
+
+			const originalRebuildType = rebuildTypeOptions;
+			rebuildTypeOptions = function() {
+				originalRebuildType();
+				if (typeSelectMobile) {
+					typeSelectMobile.innerHTML = typeSelect.innerHTML;
+					typeSelectMobile.value = typeSelect.value;
+				}
+			};
+
+			// Pull to refresh
+			let pullStartY = 0;
+			let pulling = false;
+
+			if (asidePanel) {
+				asidePanel.addEventListener('touchstart', function(e) {
+					if (asidePanel.scrollTop === 0) {
+						pullStartY = e.touches[0].clientY;
+						pulling = true;
+					}
+				}, { passive: true });
+
+				asidePanel.addEventListener('touchmove', function(e) {
+					if (pulling && e.touches[0].clientY - pullStartY > 100) {
+						pulling = false;
+						fetchMedia();
+					}
+				}, { passive: true });
+
+				asidePanel.addEventListener('touchend', function() {
+					pulling = false;
+				}, { passive: true });
+			}
+		</script>
 		</body>
 		</html>`
 		w.Header().Set("Content-Type", "text/html")
