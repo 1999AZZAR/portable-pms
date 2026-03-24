@@ -764,7 +764,8 @@ func main() {
 				}
 
 		.media-item {
-			display: block;
+			display: flex;
+			flex-direction: column;
 			width: 100%;
 			border: 1px solid #3a3d45;
 			background: linear-gradient(180deg, #20232b 0%, #171a20 100%);
@@ -772,11 +773,13 @@ func main() {
 			text-align: left;
 			border-radius: 14px;
 			padding: 10px;
-			margin: 0 0 8px;
 			cursor: pointer;
-			transition: background var(--transition-standard), border-color var(--transition-standard), transform var(--transition-quick);
-			position: relative;
-			overflow: hidden;
+			transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+			margin-bottom: 10px;
+		}
+
+		.media-item:last-child {
+			margin-bottom: 0;
 		}
 
 				.media-list.grid {
