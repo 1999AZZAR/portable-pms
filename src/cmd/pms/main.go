@@ -609,6 +609,10 @@ func main() {
 					color: #fff;
 					font-weight: 700;
 				}
+				
+				.player-extras {
+					padding: 20px 14px;
+				}
 
 				.control-row {
 					display: flex;
@@ -1433,6 +1437,10 @@ func main() {
 			.player-top-bar {
 				padding: 20px 16px;
 			}
+			
+			.player-extras {
+				display: none;
+			}
 
 			.control-row {
 				display: grid;
@@ -1594,6 +1602,13 @@ func main() {
 						</div>
 					</div>
 					</div>
+					
+					<div class="player-extras">
+						<div class="section-title">Recommended</div>
+						<div id="recommend-list" class="recommend-list"></div>
+						<div class="section-title">Recently Played</div>
+						<div id="recent-list" class="recent-list"></div>
+					</div>
 					</main>
 
 					<aside class="panel">
@@ -1693,6 +1708,9 @@ func main() {
 				const typeSelect = document.getElementById('type-select');
 				const searchInput = document.getElementById('search-input');
 				const btnClearSearch = document.getElementById('btn-clear-search');
+				const btnShuffle = document.getElementById('btn-shuffle');
+				const recommendList = document.getElementById('recommend-list');
+				const recentList = document.getElementById('recent-list');
 			let mediaData = [];
 			let currentQueue = [];
 			let currentIndex = -1;
@@ -2004,6 +2022,8 @@ func main() {
 			if (currentQueue.length === 0) {
 				listDiv.classList.remove('grid');
 				listDiv.innerHTML = '<div class="empty-state"><i class="empty-state-icon fa-solid fa-folder-open"></i><div><strong>No media found</strong></div><div>Adjust your filters or add media files</div></div>';
+				renderRecommendations();
+				renderRecent();
 				return;
 			}
 			const useGrid = window.innerWidth > 640;
@@ -2033,6 +2053,8 @@ func main() {
 					if (activeEl) {
 						activeEl.scrollIntoView({ block: 'nearest' });
 					}
+					renderRecommendations();
+					renderRecent();
 				}
 
 				function sampleRecommendations(limit) {
@@ -2085,6 +2107,80 @@ func main() {
 					if (recentPaths.length > 18) {
 						recentPaths = recentPaths.slice(0, 18);
 					}
+				}
+				
+				function renderRecommendations() {
+					if (!recommendList) return;
+					if (!currentQueue.length) {
+						recommendList.innerHTML = '<div class="media-sub">No recommendations yet.</div>';
+						return;
+					}
+					const activePath = (currentIndex >= 0 && currentQueue[currentIndex]) ? currentQueue[currentIndex].path : lastPlayedPath;
+					if (!recommendationPaths.length || recommendationAnchorPath !== activePath) {
+						refreshRecommendationsForCurrent();
+					}
+					const map = {};
+					mediaData.forEach(function(m) { map[m.path] = m; });
+					const picks = recommendationPaths.map(function(p) { return map[p]; }).filter(Boolean).slice(0, 8);
+					recommendList.innerHTML = picks.map(function(m) {
+						const kind = m.isJav ? 'JAV' : (m.isArtist ? 'Artist' : 'Episode');
+						return '' +
+							'<button class="recommend-card" data-rec-path="' + esc(m.path) + '">' +
+								cardThumbHtml(m) +
+								'<div class="card-kind">' + esc(kind) + '</div>' +
+								'<div class="recommend-name">' + esc(m.episodeTitle || m.title) + '</div>' +
+								'<div class="recommend-meta">' + esc(m.series || m.category || '-') + '</div>' +
+							'</button>';
+					}).join('');
+					document.querySelectorAll('.recommend-card').forEach(function(el) {
+						el.addEventListener('click', function() {
+							const path = el.getAttribute('data-rec-path');
+							const idx = currentQueue.findIndex(function(m) { return m.path === path; });
+							if (idx >= 0) {
+								selectItemByQueueIndex(idx);
+								return;
+							}
+							const globalIdx = mediaData.findIndex(function(m) { return m.path === path; });
+							if (globalIdx >= 0) {
+								applySelected(mediaData[globalIdx]);
+							}
+						});
+					});
+				}
+				
+				function renderRecent() {
+					if (!recentList) return;
+					if (!recentPaths.length) {
+						recentList.innerHTML = '<div class="media-sub">No recent plays yet.</div>';
+						return;
+					}
+					const map = {};
+					mediaData.forEach(function(m) { map[m.path] = m; });
+					const items = recentPaths.map(function(p) { return map[p]; }).filter(Boolean).slice(0, 10);
+					recentList.innerHTML = items.map(function(m) {
+						const kind = m.isJav ? 'JAV' : (m.isArtist ? 'Artist' : 'Episode');
+						return '' +
+							'<button class="recent-card" data-recent-path="' + esc(m.path) + '">' +
+								cardThumbHtml(m) +
+								'<div class="card-kind">' + esc(kind) + '</div>' +
+								'<div class="recent-name">' + esc(m.episodeTitle || m.title) + '</div>' +
+								'<div class="recent-meta">' + esc(m.series || m.category || '-') + '</div>' +
+							'</button>';
+					}).join('');
+					document.querySelectorAll('.recent-card').forEach(function(el) {
+						el.addEventListener('click', function() {
+							const p = el.getAttribute('data-recent-path');
+							const idx = currentQueue.findIndex(function(m) { return m.path === p; });
+							if (idx >= 0) {
+								selectItemByQueueIndex(idx);
+								return;
+							}
+							const globalIdx = mediaData.findIndex(function(m) { return m.path === p; });
+							if (globalIdx >= 0) {
+								applySelected(mediaData[globalIdx]);
+							}
+						});
+					});
 				}
 
 				function syncActiveFromPath(path) {
@@ -2319,6 +2415,9 @@ func main() {
 					searchInput.focus();
 					refreshQueue(false);
 				});
+				if (btnShuffle) {
+					btnShuffle.addEventListener('click', shuffleQueue);
+				}
 				document.addEventListener('keydown', function(e) {
 					if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
 						return;
