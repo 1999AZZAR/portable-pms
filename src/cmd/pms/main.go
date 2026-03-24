@@ -620,6 +620,38 @@ func main() {
 					gap: 10px;
 					margin-top: 12px;
 				}
+				
+				.now-playing {
+					padding: 12px 2px 4px;
+				}
+
+				.now-playing h1 {
+					font-size: clamp(1rem, 1.5vw, 1.18rem);
+					font-weight: 800;
+					margin: 0 0 6px;
+					line-height: 1.35;
+				}
+
+				.now-playing p {
+					color: var(--muted);
+					margin: 0;
+					font-size: clamp(0.8rem, 1.1vw, 0.9rem);
+				}
+
+				.meta-row {
+					display: flex;
+					flex-wrap: wrap;
+					gap: 8px;
+					margin-top: 10px;
+				}
+				
+				.mobile-only {
+					display: none;
+				}
+				
+				.desktop-only {
+					display: block;
+				}
 
 			.btn-control {
 				border: 1px solid #3d3f46;
@@ -1426,6 +1458,10 @@ func main() {
 				box-shadow: none;
 			}
 			
+			.video-frame video {
+				object-fit: contain;
+			}
+			
 			.player-back-btn {
 				display: flex;
 			}
@@ -1438,8 +1474,12 @@ func main() {
 				padding: 20px 16px;
 			}
 			
-			.player-extras {
-				display: none;
+			.mobile-only {
+				display: flex;
+			}
+			
+			.desktop-only {
+				display: none !important;
 			}
 
 			.control-row {
@@ -1564,9 +1604,9 @@ func main() {
 					<main class="panel">
 					<div class="player-wrap mobile-visible">
 					<div class="video-frame">
-						<video id="video-player" playsinline preload="metadata"></video>
+						<video id="video-player" controls playsinline preload="metadata"></video>
 						
-						<div class="player-overlay" id="player-overlay">
+						<div class="player-overlay mobile-only" id="player-overlay">
 							<div class="player-top-bar">
 								<button class="player-back-btn" id="player-back-btn">
 									<i class="fa-solid fa-chevron-down"></i>
@@ -1592,22 +1632,34 @@ func main() {
 							</div>
 						</div>
 						
-						<div class="seek-indicator left" id="seek-left">
+						<div class="seek-indicator left mobile-only" id="seek-left">
 							<i class="fa-solid fa-backward-fast"></i>
 							<span>-10s</span>
 						</div>
-						<div class="seek-indicator right" id="seek-right">
+						<div class="seek-indicator right mobile-only" id="seek-right">
 							<i class="fa-solid fa-forward-fast"></i>
 							<span>+10s</span>
 						</div>
 					</div>
-					</div>
-					
-					<div class="player-extras">
+					<div class="now-playing desktop-only">
+						<h1 id="now-playing-title">No media selected</h1>
+						<p id="now-playing-meta">Pick an item from the list to start streaming.</p>
+						<div class="meta-row">
+							<span class="meta-chip" id="meta-type">-</span>
+							<span class="meta-chip" id="meta-category">-</span>
+							<span class="meta-chip" id="meta-episode">EP -</span>
+						</div>
+						<div class="control-row">
+							<button id="btn-prev" class="btn-control" type="button">Prev</button>
+							<button id="btn-next" class="btn-control" type="button">Next</button>
+							<button id="btn-autoplay" class="btn-control accent" type="button">Autoplay: ON</button>
+							<button id="btn-play-random" class="btn-control" type="button">Play Random</button>
+						</div>
 						<div class="section-title">Recommended</div>
 						<div id="recommend-list" class="recommend-list"></div>
 						<div class="section-title">Recently Played</div>
 						<div id="recent-list" class="recent-list"></div>
+					</div>
 					</div>
 					</main>
 
@@ -1709,6 +1761,15 @@ func main() {
 				const searchInput = document.getElementById('search-input');
 				const btnClearSearch = document.getElementById('btn-clear-search');
 				const btnShuffle = document.getElementById('btn-shuffle');
+				const btnPrev = document.getElementById('btn-prev');
+				const btnNext = document.getElementById('btn-next');
+				const btnAutoplay = document.getElementById('btn-autoplay');
+				const btnPlayRandom = document.getElementById('btn-play-random');
+				const playTitle = document.getElementById('now-playing-title');
+				const playMeta = document.getElementById('now-playing-meta');
+				const metaType = document.getElementById('meta-type');
+				const metaCategory = document.getElementById('meta-category');
+				const metaEpisode = document.getElementById('meta-episode');
 				const recommendList = document.getElementById('recommend-list');
 				const recentList = document.getElementById('recent-list');
 			let mediaData = [];
@@ -2208,9 +2269,18 @@ func main() {
 				}
 
 				function applySelected(m) {
+					// Update mobile overlay
 					playerOverlayTitle.textContent = m.episodeTitle || m.title || 'Untitled';
 					const subtitle = (m.series || '-') + ' / ' + (m.type || '-');
 					playerOverlaySubtitle.textContent = subtitle;
+					
+					// Update desktop now-playing
+					if (playTitle) playTitle.textContent = m.episodeTitle || m.title || 'Untitled';
+					if (playMeta) playMeta.textContent = (m.series || '-') + ' / ' + (m.type || '-');
+					if (metaType) metaType.textContent = (m.type || '-').toUpperCase();
+					if (metaCategory) metaCategory.textContent = (m.category || '-').toUpperCase();
+					if (metaEpisode) metaEpisode.textContent = m.isJav ? 'CODE' : (m.isArtist ? 'CLIP' : (m.episodeNo !== null ? ('EP ' + m.episodeNo) : 'EP -'));
+					
 					lastPlayedPath = m.path;
 					markRecentPlayed(m.path);
 					refreshRecommendationsForCurrent();
@@ -2417,6 +2487,22 @@ func main() {
 				});
 				if (btnShuffle) {
 					btnShuffle.addEventListener('click', shuffleQueue);
+				}
+				if (btnPrev) {
+					btnPrev.addEventListener('click', playPrev);
+				}
+				if (btnNext) {
+					btnNext.addEventListener('click', playNext);
+				}
+				if (btnAutoplay) {
+					btnAutoplay.addEventListener('click', function() {
+						autoplayNext = !autoplayNext;
+						btnAutoplay.textContent = autoplayNext ? 'Autoplay: ON' : 'Autoplay: OFF';
+						btnAutoplay.classList.toggle('accent', autoplayNext);
+					});
+				}
+				if (btnPlayRandom) {
+					btnPlayRandom.addEventListener('click', playRandom);
 				}
 				document.addEventListener('keydown', function(e) {
 					if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
